@@ -1,6 +1,10 @@
 # Control Centre: Revised Phase Plan (Stage 2)
 *Based on the AI Systems Blueprint (BOA-2026-APT-01 Rev A) and the first master plan.*
 
+> **Scope update (12 Nov 2026):** Control Centre v1 covers **GFRP rebars only** (manufacturing + trading).
+> CFRP repair will be built later as a **separate system**. Phase 5 (CFRP Education Engine) and the CFRP job card move out of this plan.
+> GFRP profiles are also out of v1. Product filters are now by **diameter and surface** (ribbed / sand-coated), not by product line.
+
 ---
 
 ## 1. What the blueprint tells us (and what changes)
