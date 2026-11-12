@@ -123,7 +123,24 @@ The blueprint itself flags this: 2 leads cannot produce 10 quotes, and "0 out of
 
 ---
 
-## 5. Decisions needed from Amol
+## 5. Decisions recorded (12 Nov 2026) and their effect
+
+| Answer | Change to the plan |
+|---|---|
+| **Trading and manufacturing** | Manufacturing is planned, not optional. **Phase 2 adds Manufacturing Lite:** raw material stock (roving, resin, sand), a daily production entry (metres by diameter, scrap), a batch number on every bundle, and a test certificate on every despatch. Full production planning and costing per metre come in Phase 7. |
+| **Start-up, up to ₹5 L a month** | Keep every screen minimal. The Demand Engine (Phase 3) matters most for growth. Run costs stay near zero until volume grows. |
+| **No accounting software** | Control Centre itself issues the **GST tax invoice** in Phase 4: numbering, GSTIN, HSN, CGST/SGST/IGST, e-way bill data. It also produces the monthly GSTR-1/3B working sheet for the CA, who confirms the format. |
+| **Own WhatsApp number, no automation** | Phases 1–5 use **"tap to send"**: the app prepares the message and PDF and opens WhatsApp on Amol's phone with it filled in. There's no API cost, and every message is sent by Amol. The WhatsApp Business API is considered in Phase 6, on a separate number. |
+| **No website. Build one for GFRP rebars.** | **Done in Phase 0:** `website/`, a one-page site with a steel-vs-GFRP weight calculator and a WhatsApp enquiry form. In Phase 1 the form also writes into the Control Centre lead inbox. |
+
+## 6. Open items from Amol
+- WhatsApp number, address and GSTIN for the website (`website/config.js` and footer)
+- Domain name (e.g. aptechnologies.in) for hosting the site
+- Diameters and standard lengths actually offered (currently 6–32 mm, 6 m / 12 m)
+- Rate card, TMT→GFRP logic, quotation format
+- Product photos and test certificate (to add to the site)
+
+## 7. Decisions needed from Amol (answered above)
 1. **Trading only, or manufacturing too?** This decides whether the manufacturing module is planned or optional.
 2. **Correct numbers:** leads, quotes and orders per month, and revenue split by product line.
 3. **Accounting software** used by the CA (Tally / Vyapar / Zoho / none).
