@@ -1,5 +1,7 @@
 # Control Centre — Technology Architecture & UX Principles
 
+> **Status (12 Nov 2026):** the app foundation is built in `app/` on **Expo SDK 58 / React Native 0.88 / React 19**, with Expo Router, TypeScript, the React Compiler, native tabs on iOS/Android and Style D tokens. Typecheck, lint and web export pass. EAS build profiles for APK, Play Store and App Store are in `app/eas.json`. See `app/README.md` for the build commands. Scope v1 is GFRP rebars only.
+
 ## 1. Goal
 Build once, run everywhere: **Android (APK / Play Store), iPhone (App Store), web browser, and laptop/PC**, all from **one codebase**, fast, and ready to produce an installable app file whenever it's needed.
 
