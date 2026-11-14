@@ -2,8 +2,9 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { BigNumber, Body, Button, Card, Chip, Header, Label, Row, SampleNote, Screen } from '@/components/ui';
 import { FontFamily, Radius, Spacing } from '@/constants/theme';
-import { followUps, formatLakh, month, needsYou, owner } from '@/data/sample';
+import { followUps, formatLakh, month, needsYou } from '@/data/sample';
 import { useTheme } from '@/hooks/use-theme';
+import { ROLE_LABEL, useAuth } from '@/lib/auth';
 
 function todayLabel() {
   return new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -16,11 +17,30 @@ function greeting() {
 
 export default function TodayScreen() {
   const c = useTheme();
+  const { profile, role } = useAuth();
+  const firstName = profile?.full_name.split(' ')[0] || 'there';
+
+  if (role === 'despatch' || role === 'factory') {
+    return (
+      <Screen>
+        <Header eyebrow={todayLabel()} title={`${greeting()}, ${firstName}`} />
+        <Card style={{ gap: Spacing.two }}>
+          <Body weight="semibold">{ROLE_LABEL[role]}</Body>
+          <Body muted>
+            {role === 'despatch'
+              ? 'Your despatch slips will appear here when the owner releases an order.'
+              : 'Today’s production entry and stock will appear here.'}
+          </Body>
+        </Card>
+      </Screen>
+    );
+  }
+
   const targetPct = Math.round((month.salesLakh / month.targetLakh) * 100);
 
   return (
     <Screen>
-      <Header eyebrow={todayLabel()} title={`${greeting()}, ${owner.name}`} />
+      <Header eyebrow={todayLabel()} title={`${greeting()}, ${firstName}`} />
 
       <View style={[styles.hero, { backgroundColor: c.primary }]}>
         <Text style={[styles.heroLabel, { color: c.heroSubtext }]}>Sales this month</Text>

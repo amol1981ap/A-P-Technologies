@@ -5,19 +5,47 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import { SourceSerif4_600SemiBold } from '@expo-google-fonts/source-serif-4';
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import AppTabs from '@/components/app-tabs';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AuthProvider, useAuth } from '@/lib/auth';
 
 SplashScreen.preventAutoHideAsync();
+
+function RootNavigator() {
+  const { ready, session, profile } = useAuth();
+  const signedIn = !!session;
+  const approved = signedIn && !!profile?.active;
+
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
+
+  if (!ready) return null;
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={approved}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+      <Stack.Protected guard={signedIn && !approved}>
+        <Stack.Screen name="pending" />
+      </Stack.Protected>
+      <Stack.Protected guard={!signedIn}>
+        <Stack.Screen name="sign-in" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const c = Colors[scheme];
+  const [queryClient] = useState(() => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } }));
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -25,28 +53,21 @@ export default function RootLayout() {
     SourceSerif4_600SemiBold,
   });
 
-  useEffect(() => {
-    if (fontsLoaded || fontError) SplashScreen.hideAsync();
-  }, [fontsLoaded, fontError]);
-
   if (!fontsLoaded && !fontError) return null;
 
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
   const navTheme = {
     ...base,
-    colors: {
-      ...base.colors,
-      primary: c.primary,
-      background: c.background,
-      card: c.card,
-      text: c.text,
-      border: c.line,
-    },
+    colors: { ...base.colors, primary: c.primary, background: c.background, card: c.card, text: c.text, border: c.line },
   };
 
   return (
-    <ThemeProvider value={navTheme}>
-      <AppTabs />
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ThemeProvider value={navTheme}>
+          <RootNavigator />
+        </ThemeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

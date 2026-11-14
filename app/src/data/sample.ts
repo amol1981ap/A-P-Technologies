@@ -1,5 +1,5 @@
 /**
- * Sample data used until the database is connected (Phase 0).
+ * Sample data for screens whose live data arrives in later phases (Leads/Quotes: Phase 1, Orders/Factory: Phase 2, Money: Phase 4).
  * Shapes here are the starting point for the real database tables.
  */
 import type { Tone } from '@/components/ui';
@@ -24,8 +24,6 @@ export type Order = {
 export type StockLine = { diameterMm: number; metres: number; capacity: number; reorderAt: number };
 export type RawMaterial = { name: string; stock: string; perDay: string; daysLeft: number };
 export type Due = { party: string; days: number; amountLakh: number };
-
-export const owner = { name: 'Amol' };
 
 export const month = { salesLakh: 3.0, targetLakh: 5.0, vsLastMonthPct: 15, leads: 9, hotLeads: 4, quotes: 6, quotesWaitingRate: 2, bakayaLakh: 2.4, oldestDueDays: 41 };
 

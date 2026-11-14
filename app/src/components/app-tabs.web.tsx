@@ -1,16 +1,18 @@
 import { Tabs, TabList, TabTrigger, TabSlot, TabTriggerSlotProps, TabListProps } from 'expo-router/ui';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { TABS } from '@/constants/tabs';
+import { tabsFor } from '@/constants/tabs';
 import { FontFamily, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/lib/auth';
 
 export default function AppTabs() {
+  const { role } = useAuth();
   return (
     <Tabs>
       <TabList asChild>
         <CustomTabList>
-          {TABS.map((t) => (
+          {tabsFor(role).map((t) => (
             <TabTrigger key={t.name} name={t.name} href={t.href} asChild>
               <TabButton>{t.label}</TabButton>
             </TabTrigger>
@@ -24,6 +26,7 @@ export default function AppTabs() {
 
 export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
   const c = useTheme();
+  const narrow = useWindowDimensions().width < 640;
   // The slot's ref is typed for a View; Pressable doesn't need it here.
   const { ref: _ref, ...pressableProps } = props;
   return (
@@ -31,13 +34,14 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
       {...pressableProps}
       style={({ pressed }) => [
         styles.tabButton,
+        narrow && styles.tabButtonNarrow,
         { backgroundColor: isFocused ? c.primary : 'transparent' },
         pressed && styles.pressed,
       ]}>
       <Text
         style={{
           fontFamily: isFocused ? FontFamily.sansMedium : FontFamily.sans,
-          fontSize: 14,
+          fontSize: narrow ? 13 : 14,
           color: isFocused ? c.onPrimary : c.text,
         }}>
         {children}
@@ -93,5 +97,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     justifyContent: 'center',
   },
+  tabButtonNarrow: { paddingHorizontal: 8 },
   pressed: { opacity: 0.7 },
 });
