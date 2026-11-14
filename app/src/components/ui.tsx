@@ -393,3 +393,46 @@ export function TextLink({ label, onPress }: { label: string; onPress: () => voi
     </Pressable>
   );
 }
+
+/** Wrapping pill picker for choices with many options. */
+export function ChipPicker<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label?: string;
+  options: { value: T; label: string }[];
+  value: T | null;
+  onChange: (v: T) => void;
+}) {
+  const c = useTheme();
+  return (
+    <View style={{ gap: 8 }}>
+      {label ? <Text style={[styles.fieldLabel, { color: c.text }]}>{label}</Text> : null}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {options.map((o) => {
+          const on = o.value === value;
+          return (
+            <Pressable
+              key={o.value}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+              onPress={() => onChange(o.value)}
+              style={{
+                minHeight: 40,
+                paddingHorizontal: 14,
+                borderRadius: Radius.pill,
+                justifyContent: 'center',
+                backgroundColor: on ? c.primary : c.neutralSoft,
+              }}>
+              <Text style={{ fontFamily: on ? FontFamily.sansMedium : FontFamily.sans, fontSize: 14, color: on ? c.onPrimary : c.text }}>
+                {o.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}

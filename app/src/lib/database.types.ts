@@ -9,6 +9,10 @@ type Table<Row, Insert, Update = Partial<Insert>> = { Row: Row; Insert: Insert; 
 export type AppRole = 'owner' | 'sales' | 'despatch' | 'factory';
 export type PartyType = 'customer' | 'consultant' | 'supplier' | 'transporter';
 export type RebarSurface = 'sand_coated' | 'ribbed';
+export type LeadSource = 'instagram' | 'facebook' | 'whatsapp' | 'website' | 'indiamart' | 'referral' | 'phone' | 'walk_in' | 'other';
+export type LeadScore = 'hot' | 'warm' | 'cold';
+export type LeadStatus = 'new' | 'contacted' | 'quoted' | 'won' | 'lost';
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
 
 export type Profile = {
   id: string;
@@ -84,6 +88,54 @@ export type Party = {
   updated_at: string;
 };
 
+export type Lead = {
+  id: string;
+  party_id: string | null;
+  contact_name: string;
+  company: string | null;
+  phone: string | null;
+  buyer_role: string | null;
+  project_type: string | null;
+  location: string | null;
+  quantity_note: string | null;
+  source: LeadSource;
+  score: LeadScore | null;
+  status: LeadStatus;
+  assigned_to: string | null;
+  next_follow_up: string | null;
+  notes: string | null;
+  lost_reason: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Quote = {
+  id: string;
+  number: string;
+  lead_id: string | null;
+  party_id: string | null;
+  status: QuoteStatus;
+  valid_until: string | null;
+  terms: string | null;
+  notes: string | null;
+  sent_at: string | null;
+  followups_done: number;
+  closed_reason: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QuoteItem = {
+  id: string;
+  quote_id: string;
+  product_id: string;
+  metres: number;
+  rate_per_m: number | null;
+  gst_percent: number | null;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -91,6 +143,9 @@ export type Database = {
       company_settings: Table<CompanySettings, Partial<CompanySettings>>;
       products: Table<Product, Pick<Product, 'diameter_mm'> & Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>>;
       rates: Table<Rate, Pick<Rate, 'product_id' | 'rate_per_m'> & Partial<Pick<Rate, 'gst_percent' | 'effective_from'>>>;
+      leads: Table<Lead, Pick<Lead, 'contact_name'> & Partial<Omit<Lead, 'id' | 'contact_name' | 'created_at' | 'updated_at' | 'created_by'>>>;
+      quotes: Table<Quote, Partial<Omit<Quote, 'id' | 'number' | 'created_at' | 'updated_at' | 'created_by'>>>;
+      quote_items: Table<QuoteItem, Pick<QuoteItem, 'quote_id' | 'product_id' | 'metres'> & Partial<Pick<QuoteItem, 'rate_per_m' | 'gst_percent'>>>;
       parties: Table<Party, Pick<Party, 'name'> & Partial<Omit<Party, 'id' | 'created_at' | 'updated_at' | 'created_by'>>>;
     };
     Views: {

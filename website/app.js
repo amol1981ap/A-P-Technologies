@@ -63,12 +63,34 @@
         f.get('qty') ? 'Quantity: ' + f.get('qty') : null,
         f.get('message') ? 'Message: ' + f.get('message') : null
       ].filter(Boolean).join('\n');
-      if (!/^\d{10,15}$/.test(num)) {
-        msg.textContent = 'WhatsApp number not set yet. Add it in config.js.';
-        return;
-      }
-      window.open(waLink(lines), '_blank', 'noopener');
-      msg.textContent = 'Opening WhatsApp…';
+      var payload = {
+        name: f.get('name'), phone: f.get('phone'), company: f.get('company'), role: f.get('role'),
+        project: f.get('project'), location: f.get('location'), qty: f.get('qty'), message: f.get('message'),
+        website_url: f.get('website_url')
+      };
+      var haveWa = /^\d{10,15}$/.test(num);
+      var btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      msg.textContent = 'Sending…';
+      var saved = false;
+      var send = cfg.enquiryUrl
+        ? fetch(cfg.enquiryUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', apikey: cfg.enquiryKey || '' },
+            body: JSON.stringify(payload)
+          }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+        : Promise.resolve({ ok: false, d: {} });
+      send.then(function (res) {
+        saved = res.ok;
+        if (!res.ok && res.d && res.d.error && res.d.error.indexOf('phone') !== -1) { msg.textContent = res.d.error; return; }
+        if (haveWa) window.open(waLink(lines), '_blank', 'noopener');
+        msg.textContent = saved
+          ? 'Thank you. We have your enquiry' + (haveWa ? ' and are opening WhatsApp.' : ' and will call you soon.')
+          : (haveWa ? 'Opening WhatsApp…' : 'Could not send. Please try again.');
+      }).catch(function () {
+        if (haveWa) window.open(waLink(lines), '_blank', 'noopener');
+        msg.textContent = haveWa ? 'Opening WhatsApp…' : 'Could not send. Please try again.';
+      }).then(function () { btn.disabled = false; });
     });
   }
 
