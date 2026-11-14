@@ -13,6 +13,8 @@ export type LeadSource = 'instagram' | 'facebook' | 'whatsapp' | 'website' | 'in
 export type LeadScore = 'hot' | 'warm' | 'cold';
 export type LeadStatus = 'new' | 'contacted' | 'quoted' | 'won' | 'lost';
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+export type OrderStage = 'new' | 'in_production' | 'ready' | 'dispatched' | 'delivered' | 'cancelled';
+export type DespatchStatus = 'pending' | 'loaded' | 'delivered';
 
 export type Profile = {
   id: string;
@@ -48,6 +50,7 @@ export type Product = {
   surface: RebarSurface;
   standard_length_m: number;
   hsn_code: string | null;
+  reorder_level_m: number;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -136,6 +139,77 @@ export type QuoteItem = {
   gst_percent: number | null;
 };
 
+export type Order = {
+  id: string;
+  number: string;
+  quote_id: string | null;
+  party_id: string;
+  po_number: string | null;
+  site_address: string | null;
+  stage: OrderStage;
+  due_date: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OrderItem = {
+  id: string;
+  order_id: string;
+  product_id: string;
+  metres: number;
+  rate_per_m: number | null;
+  gst_percent: number | null;
+};
+
+export type Despatch = {
+  id: string;
+  number: string;
+  order_id: string;
+  assigned_to: string | null;
+  status: DespatchStatus;
+  vehicle_no: string | null;
+  batch_numbers: string[];
+  proof_path: string | null;
+  delivered_at: string | null;
+  released_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DespatchItem = { id: string; despatch_id: string; product_id: string; metres: number; batch_no: string | null };
+
+export type ProductionEntry = {
+  id: string;
+  entry_date: string;
+  product_id: string;
+  batch_no: string;
+  good_m: number;
+  scrap_m: number;
+  resin_kg: number | null;
+  roving_kg: number | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RawMaterial = { id: string; name: string; unit: string; sort: number };
+export type RawMaterialMovement = {
+  id: string;
+  material_id: string;
+  qty: number;
+  kind: 'receipt' | 'usage' | 'adjustment';
+  movement_date: string;
+  production_entry_id: string | null;
+  note: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+export type FinishedStock = { product_id: string | null; produced_m: number | null; despatched_m: number | null; on_hand_m: number | null; reorder_level_m: number | null };
+export type RawMaterialStock = { material_id: string | null; name: string | null; unit: string | null; sort: number | null; on_hand: number | null; avg_daily_use: number | null };
+
 export type Database = {
   public: {
     Tables: {
@@ -146,10 +220,19 @@ export type Database = {
       leads: Table<Lead, Pick<Lead, 'contact_name'> & Partial<Omit<Lead, 'id' | 'contact_name' | 'created_at' | 'updated_at' | 'created_by'>>>;
       quotes: Table<Quote, Partial<Omit<Quote, 'id' | 'number' | 'created_at' | 'updated_at' | 'created_by'>>>;
       quote_items: Table<QuoteItem, Pick<QuoteItem, 'quote_id' | 'product_id' | 'metres'> & Partial<Pick<QuoteItem, 'rate_per_m' | 'gst_percent'>>>;
+      orders: Table<Order, Pick<Order, 'party_id'> & Partial<Omit<Order, 'id' | 'number' | 'party_id' | 'created_at' | 'updated_at' | 'created_by'>>>;
+      order_items: Table<OrderItem, Pick<OrderItem, 'order_id' | 'product_id' | 'metres'> & Partial<Pick<OrderItem, 'rate_per_m' | 'gst_percent'>>>;
+      despatches: Table<Despatch, Pick<Despatch, 'order_id'> & Partial<Omit<Despatch, 'id' | 'number' | 'order_id' | 'created_at' | 'updated_at'>>>;
+      despatch_items: Table<DespatchItem, Pick<DespatchItem, 'despatch_id' | 'product_id' | 'metres'> & Partial<Pick<DespatchItem, 'batch_no'>>>;
+      production_entries: Table<ProductionEntry, Pick<ProductionEntry, 'product_id' | 'good_m'> & Partial<Omit<ProductionEntry, 'id' | 'product_id' | 'good_m' | 'batch_no' | 'created_at' | 'updated_at' | 'created_by'>>>;
+      raw_materials: Table<RawMaterial, Partial<RawMaterial>>;
+      raw_material_movements: Table<RawMaterialMovement, Pick<RawMaterialMovement, 'material_id' | 'qty' | 'kind'> & Partial<Pick<RawMaterialMovement, 'movement_date' | 'note'>>>;
       parties: Table<Party, Pick<Party, 'name'> & Partial<Omit<Party, 'id' | 'created_at' | 'updated_at' | 'created_by'>>>;
     };
     Views: {
       current_rates: { Row: CurrentRate; Relationships: [] };
+      finished_stock: { Row: FinishedStock; Relationships: [] };
+      raw_material_stock: { Row: RawMaterialStock; Relationships: [] };
     };
     Functions: { [_ in never]: never };
     Enums: {

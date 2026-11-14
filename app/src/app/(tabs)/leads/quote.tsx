@@ -6,10 +6,11 @@ import { Body, Button, Card, Chip, ChipPicker, ErrorText, Field, Label, Loading,
 import { FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/lib/auth';
-import { formatDate, formatInr, formatNum, isPriced, totals, waNumber } from '@/lib/calc';
+import { addDaysIso, formatDate, formatInr, formatNum, isPriced, totals, waNumber } from '@/lib/calc';
 import type { CompanySettings, QuoteItem } from '@/lib/database.types';
 import { FOLLOWUP_DAYS, followUpMessage, followUpState } from '@/lib/followups';
-import { productName, useCompany, useProducts, type ProductWithRate } from '@/lib/queries';
+import { useCreateOrderFromQuote, useOrders } from '@/lib/ops-queries';
+import { blankToNull, productName, useCompany, useProducts, type ProductWithRate } from '@/lib/queries';
 import { quoteHtml, shareQuotePdf } from '@/lib/quote-pdf';
 import {
   QUOTE_STATUS_LABEL,
@@ -354,8 +355,9 @@ function QuoteView({ bundle, products, company }: { bundle: QuoteListItem; produ
       {q.status === 'accepted' || q.status === 'rejected' ? (
         <>
           <Notice>
-            {q.status === 'accepted' ? 'Accepted. Orders arrive in the next phase.' : `Not taken${q.closed_reason ? `: ${q.closed_reason}` : ''}.`}
+            {q.status === 'accepted' ? 'Accepted by the customer.' : `Not taken${q.closed_reason ? `: ${q.closed_reason}` : ''}.`}
           </Notice>
+          {q.status === 'accepted' ? <OrderFromQuote bundle={bundle} /> : null}
           <Button label="Share quote PDF" variant="secondary" onPress={sharePdf} busy={busy} />
         </>
       ) : null}
@@ -372,3 +374,46 @@ function Row2({ label, value, bold }: { label: string; value: string; bold?: boo
   );
 }
 
+
+function OrderFromQuote({ bundle }: { bundle: QuoteListItem }) {
+  const { isOwner } = useAuth();
+  const { quote: q, party, lead } = bundle;
+  const orders = useOrders();
+  const create = useCreateOrderFromQuote();
+  const existing = (orders.data ?? []).find((o) => o.order.quote_id === q.id);
+  const [po, setPo] = useState('');
+  const [site, setSite] = useState([party?.address, party?.city ?? lead?.location].filter(Boolean).join(', '));
+  const [due, setDue] = useState(addDaysIso(12));
+  const [msg, setMsg] = useState('');
+
+  if (existing) {
+    return (
+      <Button label={`View order ${existing.order.number}`} onPress={() => router.push({ pathname: '/orders/order', params: { id: existing.order.id } })} />
+    );
+  }
+  if (!isOwner) return <Notice>The owner creates the order once the customer’s PO is matched to this quote.</Notice>;
+  if (!q.party_id) return null;
+
+  async function submit() {
+    setMsg('');
+    if (due.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(due.trim())) return setMsg('Write the due date as YYYY-MM-DD, for example 2026-11-30.');
+    try {
+      const id = await create.mutateAsync({ quoteId: q.id, partyId: q.party_id!, poNumber: blankToNull(po), siteAddress: blankToNull(site), dueDate: blankToNull(due) });
+      router.replace({ pathname: '/orders/order', params: { id } });
+    } catch (e) {
+      setMsg((e as Error).message);
+    }
+  }
+
+  return (
+    <Card style={{ gap: Spacing.three }}>
+      <Body weight="semibold" size={16}>Create order</Body>
+      <Notice>Check the customer’s PO against this quote first. Creating the order confirms they match.</Notice>
+      <Field label="Customer PO number" value={po} onChangeText={setPo} autoCapitalize="characters" />
+      <Field label="Delivery address" value={site} onChangeText={setSite} multiline />
+      <Field label="Due date" value={due} onChangeText={setDue} placeholder="2026-11-30" />
+      <ErrorText>{msg}</ErrorText>
+      <Button label="Create order" onPress={submit} busy={create.isPending} />
+    </Card>
+  );
+}

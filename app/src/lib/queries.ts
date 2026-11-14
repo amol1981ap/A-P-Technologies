@@ -41,7 +41,7 @@ export function useProducts(withRates: boolean) {
 export function useSaveProduct() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (p: { id?: string; diameter_mm: number; surface: RebarSurface; standard_length_m: number; hsn_code: string | null; active?: boolean }) => {
+    mutationFn: async (p: { id?: string; diameter_mm: number; surface: RebarSurface; standard_length_m: number; hsn_code: string | null; active?: boolean; reorder_level_m?: number }) => {
       const { id, ...fields } = p;
       if (id) unwrap(await supabase.from('products').update(fields).eq('id', id).select().single());
       else unwrap(await supabase.from('products').insert(fields).select().single());

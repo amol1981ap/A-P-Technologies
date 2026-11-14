@@ -44,7 +44,14 @@
           }
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Control Centre to take a photo of the signed delivery challan.",
+          "photosPermission": "Allow Control Centre to attach a photo of the delivery challan."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

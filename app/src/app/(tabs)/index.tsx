@@ -5,9 +5,11 @@ import { StyleSheet, Text, View } from 'react-native';
 import { BigNumber, Body, Button, Card, Empty, Header, Label, Loading, Row, Screen, type Tone } from '@/components/ui';
 import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { ROLE_LABEL, useAuth } from '@/lib/auth';
+import { useAuth } from '@/lib/auth';
 import { formatInr, formatNum, isPriced, totals } from '@/lib/calc';
 import { followUpState } from '@/lib/followups';
+import { useDespatches, useFinishedStock, useOrders, useProductionEntries, useRawStock } from '@/lib/ops-queries';
+import { productName } from '@/lib/queries';
 import { useLeads, useQuotes } from '@/lib/sales-queries';
 
 function todayLabel() {
@@ -25,22 +27,78 @@ export default function TodayScreen() {
   const { profile, role } = useAuth();
   const firstName = profile?.full_name.split(' ')[0] || 'there';
 
-  if (role === 'despatch' || role === 'factory') {
-    return (
-      <Screen>
-        <Header eyebrow={todayLabel()} title={`${greeting()}, ${firstName}`} />
-        <Card style={{ gap: Spacing.two }}>
-          <Body weight="semibold">{ROLE_LABEL[role]}</Body>
-          <Body muted>
-            {role === 'despatch'
-              ? 'Your despatch slips will appear here when the owner releases an order.'
-              : 'Today’s production entry and stock will appear here.'}
-          </Body>
-        </Card>
-      </Screen>
-    );
-  }
+  if (role === 'despatch') return <DespatchToday firstName={firstName} />;
+  if (role === 'factory') return <FactoryToday firstName={firstName} />;
   return <SalesToday firstName={firstName} />;
+}
+
+function DespatchToday({ firstName }: { firstName: string }) {
+  const c = useTheme();
+  const { profile } = useAuth();
+  const { data, isLoading } = useDespatches(true, profile?.id);
+  const open = (data ?? []).filter((d) => d.despatch.status !== 'delivered');
+  return (
+    <Screen>
+      <Header eyebrow={todayLabel()} title={`${greeting()}, ${firstName}`} />
+      <Label style={{ marginLeft: Spacing.one }}>To deliver · {open.length}</Label>
+      {isLoading ? <Loading /> : null}
+      {!isLoading && open.length === 0 ? <Empty title="Nothing to deliver" detail="New despatches from the owner will appear here." /> : null}
+      {open.length > 0 ? (
+        <Card style={{ paddingVertical: Spacing.one }}>
+          {open.map((d, i) => (
+            <Row key={d.despatch.id} first={i === 0}>
+              <View style={[styles.dot, { backgroundColor: d.despatch.status === 'pending' ? c.attention : c.primary }]} />
+              <View style={{ flex: 1, gap: 2 }}>
+                <Body weight="semibold">{d.party?.name ?? 'Customer'}</Body>
+                <Body muted size={13}>{d.despatch.number} · {formatNum(d.items.reduce((s, x) => s + x.metres, 0))} m · {d.despatch.status === 'pending' ? 'to load' : 'loaded'}</Body>
+              </View>
+              <Button label="Open" size="small" onPress={() => router.push({ pathname: '/orders/despatch', params: { id: d.despatch.id } })} />
+            </Row>
+          ))}
+        </Card>
+      ) : null}
+    </Screen>
+  );
+}
+
+function FactoryToday({ firstName }: { firstName: string }) {
+  const c = useTheme();
+  const today = new Date().toISOString().slice(0, 10);
+  const entries = useProductionEntries(today);
+  const stock = useFinishedStock();
+  const raw = useRawStock();
+  const done = (entries.data ?? []).length > 0;
+  const low = (stock.data ?? []).filter((s) => s.low);
+  const lowRaw = (raw.data ?? []).filter((r) => r.low);
+  return (
+    <Screen>
+      <Header eyebrow={todayLabel()} title={`${greeting()}, ${firstName}`} />
+      <Card style={{ gap: Spacing.three }}>
+        <Body weight="semibold" size={16}>{done ? 'Production entered today' : 'Production not entered yet'}</Body>
+        <Body muted>{done ? `${formatNum((entries.data ?? []).reduce((s, e) => s + e.good_m, 0))} m made today.` : 'Enter what the line made once the shift is done.'}</Body>
+        <Button label={done ? 'Add or update' : 'Enter today’s production'} onPress={() => router.push('/factory/production')} />
+      </Card>
+      {low.length + lowRaw.length > 0 ? <Label style={{ marginLeft: Spacing.one }}>Running low</Label> : null}
+      {low.length + lowRaw.length > 0 ? (
+        <Card style={{ paddingVertical: Spacing.one }}>
+          {low.map((s, i) => (
+            <Row key={s.product.id} first={i === 0}>
+              <View style={[styles.dot, { backgroundColor: c.attention }]} />
+              <Body style={{ flex: 1 }}>{productName(s.product)}</Body>
+              <Body muted size={13}>{formatNum(s.onHand)} m left</Body>
+            </Row>
+          ))}
+          {lowRaw.map((r, i) => (
+            <Row key={r.id} first={low.length === 0 && i === 0}>
+              <View style={[styles.dot, { backgroundColor: c.attention }]} />
+              <Body style={{ flex: 1 }}>{r.name}</Body>
+              <Body muted size={13}>{r.daysLeft} days left</Body>
+            </Row>
+          ))}
+        </Card>
+      ) : null}
+    </Screen>
+  );
 }
 
 function SalesToday({ firstName }: { firstName: string }) {
@@ -48,6 +106,9 @@ function SalesToday({ firstName }: { firstName: string }) {
   const { isOwner } = useAuth();
   const leads = useLeads();
   const quotes = useQuotes();
+  const orders = useOrders();
+  const stock = useFinishedStock();
+  const raw = useRawStock();
 
   const view = useMemo(() => {
     const ls = leads.data ?? [];
@@ -94,6 +155,30 @@ function SalesToday({ firstName }: { firstName: string }) {
         rank: l.score === 'hot' ? 1.5 : 3,
       });
     }
+    if (isOwner) {
+      for (const b of orders.data ?? []) {
+        const o = b.order;
+        if (o.stage === 'dispatched' || o.stage === 'delivered' || o.stage === 'cancelled') continue;
+        const left = b.items.reduce((s, i) => s + i.metres, 0) - b.despatches.reduce((s, d) => s + d.items.reduce((x, i) => x + i.metres, 0), 0);
+        if (left > 0) {
+          needs.push({
+            id: o.id,
+            title: 'Release despatch',
+            detail: `${b.party?.name ?? 'Customer'} · ${o.number} · ${formatNum(left)} m to go`,
+            action: 'Open',
+            tone: 'calm',
+            go: () => router.push({ pathname: '/orders/order', params: { id: o.id } }),
+            rank: 1.2,
+          });
+        }
+      }
+      for (const s of (stock.data ?? []).filter((x) => x.low)) {
+        needs.push({ id: s.product.id, title: 'Low stock', detail: `${productName(s.product)} · ${formatNum(s.onHand)} m left`, action: 'Factory', tone: 'attention', go: () => router.push('/factory'), rank: 2.5 });
+      }
+      for (const r of (raw.data ?? []).filter((x) => x.low)) {
+        needs.push({ id: r.id, title: `${r.name} running low`, detail: `${r.daysLeft} days left at current use`, action: 'Factory', tone: 'attention', go: () => router.push('/factory'), rank: 2.6 });
+      }
+    }
     needs.sort((a, b) => a.rank - b.rank);
 
     const sent = qs.filter((x) => x.quote.status === 'sent');
@@ -107,7 +192,7 @@ function SalesToday({ firstName }: { firstName: string }) {
       sentValue,
       followUpsDue: sent.filter((x) => followUpState(x.quote)?.due).length,
     };
-  }, [leads.data, quotes.data, isOwner]);
+  }, [leads.data, quotes.data, orders.data, stock.data, raw.data, isOwner]);
 
   const loading = leads.isLoading || quotes.isLoading;
 

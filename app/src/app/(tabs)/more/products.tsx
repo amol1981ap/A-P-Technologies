@@ -60,6 +60,7 @@ function ProductCard({ product: p, isOwner, open, onToggle }: { product: Product
   const [rate, setRateText] = useState(p.rate_per_m != null ? String(p.rate_per_m) : '');
   const [gst, setGst] = useState(p.gst_percent != null ? String(p.gst_percent) : '');
   const [hsn, setHsn] = useState(p.hsn_code ?? '');
+  const [reorder, setReorder] = useState(p.reorder_level_m ? String(p.reorder_level_m) : '');
   const [msg, setMsg] = useState('');
 
   async function save() {
@@ -69,8 +70,10 @@ function ProductCard({ product: p, isOwner, open, onToggle }: { product: Product
     if (!(r >= 0) || rate.trim() === '') return setMsg('Enter a rate per metre.');
     if (g != null && !(g >= 0 && g <= 28)) return setMsg('GST must be between 0 and 28.');
     try {
-      if ((p.hsn_code ?? '') !== hsn.trim()) {
-        await saveProduct.mutateAsync({ id: p.id, diameter_mm: p.diameter_mm, surface: p.surface, standard_length_m: p.standard_length_m, hsn_code: blankToNull(hsn) });
+      const ro = reorder.trim() === '' ? 0 : Number(reorder);
+      if (!(ro >= 0)) return setMsg('Reorder level must be zero or more.');
+      if ((p.hsn_code ?? '') !== hsn.trim() || ro !== p.reorder_level_m) {
+        await saveProduct.mutateAsync({ id: p.id, diameter_mm: p.diameter_mm, surface: p.surface, standard_length_m: p.standard_length_m, hsn_code: blankToNull(hsn), reorder_level_m: ro });
       }
       if (r !== p.rate_per_m || g !== p.gst_percent) await setRate.mutateAsync({ product_id: p.id, rate_per_m: r, gst_percent: g });
       onToggle();
@@ -111,7 +114,14 @@ function ProductCard({ product: p, isOwner, open, onToggle }: { product: Product
               <Field label="GST %" value={gst} onChangeText={setGst} keyboard="decimal-pad" hint="Confirm with your CA" />
             </View>
           </View>
-          <Field label="HSN code" value={hsn} onChangeText={setHsn} keyboard="numeric" />
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Field label="HSN code" value={hsn} onChangeText={setHsn} keyboard="numeric" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Field label="Reorder level (m)" value={reorder} onChangeText={setReorder} keyboard="decimal-pad" hint="Alert below this stock" />
+            </View>
+          </View>
           <Toggle
             label="Currently sold"
             value={p.active}

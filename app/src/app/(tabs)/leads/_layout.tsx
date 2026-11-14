@@ -3,6 +3,8 @@ import { Stack } from 'expo-router';
 import { FontFamily } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+export const unstable_settings = { initialRouteName: 'index' };
+
 export default function LeadsLayout() {
   const c = useTheme();
   return (
