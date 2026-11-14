@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth';
 import type { CompanySettings } from '@/lib/database.types';
 import { blankToNull, GSTIN_PATTERN, useCompany, useSaveCompany } from '@/lib/queries';
 
-const KEYS = ['name', 'gstin', 'address', 'city', 'state', 'state_code', 'phone', 'whatsapp', 'email', 'bank_name', 'bank_account', 'bank_ifsc', 'quote_terms'] as const;
+const KEYS = ['name', 'gstin', 'office_address', 'works_address', 'state', 'state_code', 'phone', 'whatsapp', 'email', 'bank_name', 'bank_account', 'bank_ifsc', 'quote_terms'] as const;
 type Key = (typeof KEYS)[number];
 type Form = Record<Key, string>;
 
@@ -59,11 +59,9 @@ function CompanyForm({ data }: { data: CompanySettings }) {
       <Card style={{ gap: Spacing.three }}>
         <Field label="Company name" value={f.name} onChangeText={set('name')} editable={e} autoCapitalize="words" />
         <Field label="GSTIN" value={f.gstin} onChangeText={set('gstin')} editable={e} autoCapitalize="characters" />
-        <Field label="Address" value={f.address} onChangeText={set('address')} editable={e} multiline />
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ flex: 1 }}><Field label="City" value={f.city} onChangeText={set('city')} editable={e} autoCapitalize="words" /></View>
-          <View style={{ flex: 1 }}><Field label="State" value={f.state} onChangeText={set('state')} editable={e} autoCapitalize="words" /></View>
-        </View>
+        <Field label="Office address" value={f.office_address} onChangeText={set('office_address')} editable={e} multiline hint="Printed on quotations and invoices" />
+        <Field label="Works address" value={f.works_address} onChangeText={set('works_address')} editable={e} multiline hint="Factory. Printed on quotations and invoices" />
+        <Field label="State" value={f.state} onChangeText={set('state')} editable={e} autoCapitalize="words" hint="Used to split GST into CGST, SGST or IGST" />
       </Card>
       <Label style={{ marginLeft: Spacing.one, marginTop: Spacing.two }}>Contact</Label>
       <Card style={{ gap: Spacing.three }}>

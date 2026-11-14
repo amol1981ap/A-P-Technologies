@@ -31,6 +31,8 @@ export type CompanySettings = {
   name: string;
   gstin: string | null;
   address: string | null;
+  office_address: string | null;
+  works_address: string | null;
   city: string | null;
   state: string | null;
   state_code: string | null;

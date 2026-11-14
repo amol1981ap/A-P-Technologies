@@ -39,7 +39,7 @@ export function quoteHtml(args: { company: CompanySettings; party: Party | null;
   *{box-sizing:border-box} body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#1E242B;margin:0;padding:36px;font-size:13px;line-height:1.5}
   h1{font-size:24px;margin:0 0 2px} h2{font-size:14px;margin:26px 0 8px;letter-spacing:.06em;text-transform:uppercase;color:#5B636B}
   .top{display:flex;justify-content:space-between;gap:24px;border-bottom:2px solid #1F5C46;padding-bottom:14px}
-  .muted{color:#5B636B} .r{text-align:right} .right{text-align:right}
+  .muted{color:#5B636B} .r{text-align:right} .right{text-align:right;white-space:nowrap}
   table{width:100%;border-collapse:collapse} th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#5B636B;text-align:left;padding:8px 6px;border-bottom:1px solid #D9D4CB}
   th.r{text-align:right} td{padding:9px 6px;border-bottom:1px solid #EFEDE8}
   .sum{width:280px;margin-left:auto;margin-top:12px} .sum td{border:0;padding:4px 6px} .sum .tot td{font-weight:700;font-size:15px;border-top:2px solid #1F5C46;padding-top:8px}
@@ -47,7 +47,9 @@ export function quoteHtml(args: { company: CompanySettings; party: Party | null;
 </style></head><body>
   <div class="top">
     <div><h1>${esc(c.name)}</h1>
-      <div class="muted">${nl([c.address, [c.city, c.state].filter(Boolean).join(', ')].filter(Boolean).join('\n'))}</div>
+      ${c.office_address ? `<div class="muted"><strong>Office:</strong> ${esc(c.office_address)}</div>` : ''}
+      ${c.works_address ? `<div class="muted"><strong>Works:</strong> ${esc(c.works_address)}</div>` : ''}
+      ${!c.office_address && !c.works_address && c.address ? `<div class="muted">${nl(c.address)}</div>` : ''}
       <div class="muted">${[c.phone && `Phone ${esc(c.phone)}`, c.email && esc(c.email)].filter(Boolean).join(' · ')}</div>
       ${c.gstin ? `<div class="muted">GSTIN ${esc(c.gstin)}</div>` : ''}</div>
     <div class="right"><div style="font-size:20px;font-weight:700">QUOTATION</div>
