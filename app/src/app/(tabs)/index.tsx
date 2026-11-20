@@ -11,6 +11,8 @@ import { followUpState } from '@/lib/followups';
 import { useDespatches, useFinishedStock, useOrders, useProductionEntries, useRawStock } from '@/lib/ops-queries';
 import { productName } from '@/lib/queries';
 import { useProspects } from '@/lib/growth-queries';
+import { reminderDue } from '@/lib/ledger';
+import { useInvoices, useUninvoiced } from '@/lib/money-queries';
 import { useLeads, useQuotes } from '@/lib/sales-queries';
 
 function todayLabel() {
@@ -111,6 +113,8 @@ function SalesToday({ firstName }: { firstName: string }) {
   const stock = useFinishedStock();
   const raw = useRawStock();
   const prospects = useProspects();
+  const invoices = useInvoices();
+  const uninvoiced = useUninvoiced();
 
   const view = useMemo(() => {
     const ls = leads.data ?? [];
@@ -171,6 +175,28 @@ function SalesToday({ firstName }: { firstName: string }) {
       });
     }
     if (isOwner) {
+      for (const u of uninvoiced.data ?? []) {
+        needs.push({
+          id: u.despatch.id,
+          title: 'Raise invoice',
+          detail: `${u.party.name} · ${u.despatch.number} · ${formatNum(u.items.reduce((s, x) => s + x.metres, 0))} m`,
+          action: 'Invoice',
+          tone: 'calm',
+          go: () => router.push({ pathname: '/money/new-invoice', params: { despatchId: u.despatch.id } }),
+          rank: 1.3,
+        });
+      }
+      for (const r of (invoices.data ?? []).filter(reminderDue)) {
+        needs.push({
+          id: r.invoice.id,
+          title: r.daysOverdue > 0 ? `Payment overdue · ${r.daysOverdue} days` : 'Payment due soon',
+          detail: `${r.party?.name ?? 'Customer'} · ${r.invoice.number} · ${formatInr(r.balance).replace(/\.00$/, '')}`,
+          action: 'Remind',
+          tone: r.daysOverdue > 0 ? 'attention' : 'calm',
+          go: () => router.push({ pathname: '/money/invoice', params: { id: r.invoice.id } }),
+          rank: r.daysOverdue > 0 ? 1.1 : 2.2,
+        });
+      }
       for (const b of orders.data ?? []) {
         const o = b.order;
         if (o.stage === 'dispatched' || o.stage === 'delivered' || o.stage === 'cancelled') continue;
@@ -207,7 +233,7 @@ function SalesToday({ firstName }: { firstName: string }) {
       sentValue,
       followUpsDue: sent.filter((x) => followUpState(x.quote)?.due).length,
     };
-  }, [leads.data, quotes.data, orders.data, stock.data, raw.data, prospects.data, isOwner]);
+  }, [leads.data, quotes.data, orders.data, stock.data, raw.data, prospects.data, invoices.data, uninvoiced.data, isOwner]);
 
   const loading = leads.isLoading || quotes.isLoading;
 

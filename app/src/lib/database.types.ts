@@ -246,6 +246,69 @@ export type LeadPerformance = {
   order_value: number | null;
 };
 
+export type InvoiceStatus = 'draft' | 'issued' | 'cancelled';
+export type PaymentMode = 'bank_transfer' | 'upi' | 'cheque' | 'cash' | 'other';
+export type Invoice = {
+  id: string;
+  number: string | null;
+  order_id: string | null;
+  despatch_id: string | null;
+  party_id: string;
+  invoice_date: string;
+  due_date: string | null;
+  taxable_value: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  round_off: number;
+  total: number;
+  status: InvoiceStatus;
+  place_of_supply: string | null;
+  is_interstate: boolean;
+  eway_bill_no: string | null;
+  terms_days: number;
+  last_reminder_at: string | null;
+  reminders_sent: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type InvoiceItem = {
+  id: string;
+  invoice_id: string;
+  product_id: string | null;
+  description: string;
+  hsn_code: string | null;
+  metres: number;
+  rate_per_m: number;
+  gst_percent: number;
+  taxable: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+};
+export type Payment = {
+  id: string;
+  invoice_id: string | null;
+  party_id: string;
+  amount: number;
+  received_on: string;
+  mode: PaymentMode;
+  reference: string | null;
+  recorded_by: string | null;
+  created_at: string;
+};
+export type InvoiceBalance = {
+  invoice_id: string | null;
+  party_id: string | null;
+  status: InvoiceStatus | null;
+  total: number | null;
+  due_date: string | null;
+  paid: number | null;
+  balance: number | null;
+  days_overdue: number | null;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -265,12 +328,16 @@ export type Database = {
       raw_material_movements: Table<RawMaterialMovement, Pick<RawMaterialMovement, 'material_id' | 'qty' | 'kind'> & Partial<Pick<RawMaterialMovement, 'movement_date' | 'note'>>>;
       marketing_spend: Table<MarketingSpend, Pick<MarketingSpend, 'month' | 'source' | 'amount'> & Partial<Pick<MarketingSpend, 'note'>>>;
       prospects: Table<Prospect, Pick<Prospect, 'name'> & Partial<Omit<Prospect, 'id' | 'name' | 'created_at' | 'updated_at' | 'created_by'>>>;
+      invoices: Table<Invoice, Pick<Invoice, 'party_id'> & Partial<Omit<Invoice, 'id' | 'party_id' | 'number' | 'created_at' | 'updated_at'>>>;
+      invoice_items: Table<InvoiceItem, Omit<InvoiceItem, 'id'>>;
+      payments: Table<Payment, Pick<Payment, 'party_id' | 'amount'> & Partial<Pick<Payment, 'invoice_id' | 'received_on' | 'mode' | 'reference'>>>;
       parties: Table<Party, Pick<Party, 'name'> & Partial<Omit<Party, 'id' | 'created_at' | 'updated_at' | 'created_by'>>>;
     };
     Views: {
       current_rates: { Row: CurrentRate; Relationships: [] };
       finished_stock: { Row: FinishedStock; Relationships: [] };
       lead_performance: { Row: LeadPerformance; Relationships: [] };
+      invoice_balances: { Row: InvoiceBalance; Relationships: [] };
       raw_material_stock: { Row: RawMaterialStock; Relationships: [] };
     };
     Functions: { [_ in never]: never };
