@@ -1,5 +1,5 @@
 import { formatDate, formatInr } from './calc';
-import type { CompanySettings, Invoice, InvoiceItem, Party } from './database.types';
+import type { CompanySettings, Invoice, InvoiceItem, Party, PurchaseOrder } from './database.types';
 import type { InvoiceRow } from './money-queries';
 
 // ───────── Bakaya ageing ─────────
@@ -90,7 +90,13 @@ export function gstTotals(rows: GstRow[]) {
 const q = (s: string | number | null | undefined) => `"${String(s ?? '').replace(/"/g, '""')}"`;
 
 /** Invoice register plus HSN summary, the two tables a CA needs for the sales return. */
-export function gstCsv(rows: GstRow[], items: InvoiceItem[], company: CompanySettings, monthLabel: string) {
+export type PurchaseRow = { po: PurchaseOrder; supplier: Party | null };
+
+export function purchaseTotals(rows: PurchaseRow[]) {
+  return rows.reduce((t, r) => ({ taxable: t.taxable + r.po.taxable_value, cgst: t.cgst + r.po.cgst, sgst: t.sgst + r.po.sgst, igst: t.igst + r.po.igst }), { taxable: 0, cgst: 0, sgst: 0, igst: 0 });
+}
+
+export function gstCsv(rows: GstRow[], items: InvoiceItem[], company: CompanySettings, monthLabel: string, purchases: PurchaseRow[] = []) {
   const out: string[] = [];
   out.push(`${q(company.name)},${q('GSTIN ' + (company.gstin ?? ''))},${q('Sales register ' + monthLabel)}`);
   out.push('');
@@ -117,6 +123,15 @@ export function gstCsv(rows: GstRow[], items: InvoiceItem[], company: CompanySet
   }
   for (const [hsn, h] of byHsn) out.push([hsn, 'MTR', h.qty.toFixed(2), h.taxable.toFixed(2), h.cgst.toFixed(2), h.sgst.toFixed(2), h.igst.toFixed(2)].map(q).join(','));
   out.push('');
-  out.push(q('Output tax only. Purchase invoices and input tax credit are not tracked yet.'));
+  out.push(q('Purchase register (supplier bills received)'));
+  out.push(['Supplier bill no', 'Bill date', 'Supplier', 'Supplier GSTIN', 'Taxable value', 'CGST', 'SGST', 'IGST', 'Bill value'].map(q).join(','));
+  for (const r of purchases) {
+    const v = r.po;
+    out.push([v.supplier_bill_no, v.supplier_bill_date, r.supplier?.name, r.supplier?.gstin ?? 'Unregistered', v.taxable_value, v.cgst, v.sgst, v.igst, v.total].map(q).join(','));
+  }
+  const pt = purchaseTotals(purchases);
+  out.push(['Total', '', '', '', pt.taxable.toFixed(2), pt.cgst.toFixed(2), pt.sgst.toFixed(2), pt.igst.toFixed(2), ''].map(q).join(','));
+  out.push('');
+  out.push(q(`Output tax ${(t.cgst + t.sgst + t.igst).toFixed(2)}, input tax ${(pt.cgst + pt.sgst + pt.igst).toFixed(2)}, ${t.cgst + t.sgst + t.igst - pt.cgst - pt.sgst - pt.igst >= 0 ? 'net payable ' + (t.cgst + t.sgst + t.igst - pt.cgst - pt.sgst - pt.igst).toFixed(2) : 'credit to carry forward ' + (pt.cgst + pt.sgst + pt.igst - t.cgst - t.sgst - t.igst).toFixed(2)}. Input credit is only valid for suppliers who are registered and have filed; your CA confirms.`));
   return out.join('\n');
 }

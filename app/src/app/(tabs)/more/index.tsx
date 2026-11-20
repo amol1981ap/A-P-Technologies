@@ -22,6 +22,10 @@ export default function MoreScreen() {
         {role ? <Chip>{ROLE_LABEL[role]}</Chip> : null}
       </Card>
 
+      <Card style={{ paddingVertical: Spacing.one, marginTop: Spacing.two }}>
+        <LinkRow first title={isOwner ? 'Tasks' : 'My tasks'} detail={isOwner ? 'Give your team tasks with due dates and photo proof' : 'What the owner has asked you to do'} onPress={() => router.push('/more/tasks')} />
+      </Card>
+
       <Label style={{ marginTop: Spacing.two, marginLeft: Spacing.one }}>Business setup</Label>
       <Card style={{ paddingVertical: Spacing.one }}>
         <LinkRow

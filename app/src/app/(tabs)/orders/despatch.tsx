@@ -8,7 +8,10 @@ import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { formatNum, waNumber } from '@/lib/calc';
 import { DESPATCH_LABEL, uploadProof, useDespatch, useProofUrl, useUpdateDespatch, type DespatchBundle } from '@/lib/ops-queries';
-import { productName } from '@/lib/queries';
+import { certificateHtml } from '@/lib/cert-pdf';
+import { productName, useCompany } from '@/lib/queries';
+import { shareQuotePdf } from '@/lib/quote-pdf';
+import { useTestsForBatches } from '@/lib/tests-queries';
 
 export default function DespatchScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -24,6 +27,9 @@ function Slip({ bundle: b }: { bundle: DespatchBundle }) {
   const mine = isOwner || d.assigned_to === profile?.id;
   const update = useUpdateDespatch();
   const proof = useProofUrl(d.proof_path);
+  const company = useCompany();
+  const batchNos = b.items.map((i) => i.batch_no).filter((x): x is string => !!x);
+  const tests = useTestsForBatches(batchNos);
   const [vehicle, setVehicle] = useState(d.vehicle_no ?? '');
   const [photo, setPhoto] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
@@ -56,6 +62,18 @@ function Slip({ bundle: b }: { bundle: DespatchBundle }) {
     const res = Platform.OS === 'web' ? await ImagePicker.launchImageLibraryAsync(opts) : await ImagePicker.launchCameraAsync(opts);
     if (!res.canceled && res.assets[0]) setPhoto(res.assets[0].uri);
   }
+
+  // Only warn once the lookup has finished, or the warning flashes while results are still loading.
+  const untested = tests.isSuccess ? [...new Set(batchNos)].filter((n) => !(tests.data ?? []).some((t) => t.test.batch_no === n)) : [];
+  const shareCertificate = () =>
+    guarded(async () => {
+      if (!company.data) throw new Error('Company details are still loading.');
+      const lines = b.items.map((i) => {
+        const p = b.products.find((x) => x.id === i.product_id);
+        return { name: p ? productName(p) : 'GFRP rebar', metres: i.metres, batch_no: i.batch_no };
+      });
+      await shareQuotePdf(certificateHtml({ company: company.data, party: b.party, despatch: d, order: b.order, lines, tests: tests.data ?? [] }), `${d.number}-certificate`);
+    });
 
   const markLoaded = () =>
     guarded(async () => {
@@ -119,6 +137,14 @@ function Slip({ bundle: b }: { bundle: DespatchBundle }) {
           );
         })}
       </Card>
+
+      {mine && batchNos.length > 0 ? (
+        <Card style={{ gap: Spacing.three }}>
+          <Body weight="semibold">Test certificate</Body>
+          {!tests.isSuccess ? <Body muted size={13}>Checking test results…</Body> : untested.length > 0 ? <Notice>{`No test recorded yet for batch ${untested.join(', ')}. The certificate will say so.`}</Notice> : <Body muted size={13}>Results for every batch on this load.</Body>}
+          <Button label="Share test certificate" variant="secondary" onPress={shareCertificate} busy={busy} disabled={!tests.isSuccess} />
+        </Card>
+      ) : null}
 
       {mine && !done ? (
         <>

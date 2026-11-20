@@ -9,8 +9,10 @@ import { useAuth } from '@/lib/auth';
 import { formatInr, formatNum, isPriced, totals } from '@/lib/calc';
 import { followUpState } from '@/lib/followups';
 import { useDespatches, useFinishedStock, useOrders, useProductionEntries, useRawStock } from '@/lib/ops-queries';
-import { productName } from '@/lib/queries';
+import { productName, useTeam } from '@/lib/queries';
+import { MyTasks } from '@/components/my-tasks';
 import { useProspects } from '@/lib/growth-queries';
+import { taskState, useTasks } from '@/lib/tasks-queries';
 import { reminderDue } from '@/lib/ledger';
 import { useInvoices, useUninvoiced } from '@/lib/money-queries';
 import { useLeads, useQuotes } from '@/lib/sales-queries';
@@ -60,6 +62,7 @@ function DespatchToday({ firstName }: { firstName: string }) {
           ))}
         </Card>
       ) : null}
+      <MyTasks />
     </Screen>
   );
 }
@@ -100,6 +103,7 @@ function FactoryToday({ firstName }: { firstName: string }) {
           ))}
         </Card>
       ) : null}
+      <MyTasks />
     </Screen>
   );
 }
@@ -114,6 +118,9 @@ function SalesToday({ firstName }: { firstName: string }) {
   const raw = useRawStock();
   const prospects = useProspects();
   const invoices = useInvoices();
+  const tasks = useTasks();
+  const team = useTeam();
+  const { profile } = useAuth();
   const uninvoiced = useUninvoiced();
 
   const view = useMemo(() => {
@@ -175,6 +182,17 @@ function SalesToday({ firstName }: { firstName: string }) {
       });
     }
     if (isOwner) {
+      for (const t of (tasks.data ?? []).filter((x) => x.status === 'open' && x.assigned_to !== profile?.id && taskState(x).text === 'Overdue')) {
+        needs.push({
+          id: t.id,
+          title: 'Task overdue',
+          detail: `${t.title} · ${team.data?.find((p) => p.id === t.assigned_to)?.full_name ?? 'someone'}`,
+          action: 'Open',
+          tone: 'attention',
+          go: () => router.push({ pathname: '/more/task', params: { id: t.id } }),
+          rank: 2.4,
+        });
+      }
       for (const u of uninvoiced.data ?? []) {
         needs.push({
           id: u.despatch.id,
@@ -233,7 +251,7 @@ function SalesToday({ firstName }: { firstName: string }) {
       sentValue,
       followUpsDue: sent.filter((x) => followUpState(x.quote)?.due).length,
     };
-  }, [leads.data, quotes.data, orders.data, stock.data, raw.data, prospects.data, invoices.data, uninvoiced.data, isOwner]);
+  }, [leads.data, quotes.data, orders.data, stock.data, raw.data, prospects.data, invoices.data, uninvoiced.data, tasks.data, team.data, profile?.id, isOwner]);
 
   const loading = leads.isLoading || quotes.isLoading;
 

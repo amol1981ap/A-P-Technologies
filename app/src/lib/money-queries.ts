@@ -229,12 +229,16 @@ export function useGstMonth(from: string, to: string) {
       const invoices = unwrap(
         await supabase.from('invoices').select('*').eq('status', 'issued').gte('invoice_date', from).lt('invoice_date', to).order('invoice_date').order('number'),
       );
-      if (invoices.length === 0) return { invoices, items: [] as InvoiceItem[], parties: [] as Party[] };
+      // Supplier bills counted in the month the bill is dated. Money-wise: goods received on a purchase order.
+      const purchases = unwrap(
+        await supabase.from('purchase_orders').select('*').eq('status', 'received').gte('supplier_bill_date', from).lt('supplier_bill_date', to).order('supplier_bill_date'),
+      );
+      const partyIds = [...new Set([...invoices.map((i) => i.party_id), ...purchases.map((p) => p.supplier_id)])];
       const [items, parties] = await Promise.all([
-        supabase.from('invoice_items').select('*').in('invoice_id', invoices.map((i) => i.id)),
-        supabase.from('parties').select('*').in('id', [...new Set(invoices.map((i) => i.party_id))]),
+        invoices.length ? supabase.from('invoice_items').select('*').in('invoice_id', invoices.map((i) => i.id)) : Promise.resolve({ data: [] as InvoiceItem[], error: null }),
+        partyIds.length ? supabase.from('parties').select('*').in('id', partyIds) : Promise.resolve({ data: [] as Party[], error: null }),
       ]);
-      return { invoices, items: unwrap(items), parties: unwrap(parties) };
+      return { invoices, purchases, items: unwrap(items), parties: unwrap(parties) };
     },
   });
 }

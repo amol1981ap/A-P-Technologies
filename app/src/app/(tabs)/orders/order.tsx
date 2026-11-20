@@ -18,7 +18,10 @@ import {
   useSetStage,
   type OrderBundle,
 } from '@/lib/ops-queries';
-import { productName, useProducts, useTeam } from '@/lib/queries';
+import { costPerMetre, orderMargin } from '@/lib/costing';
+import { useMaterialCost } from '@/lib/purchasing-queries';
+import { useRawStock as useRawStockLines } from '@/lib/ops-queries';
+import { productName, useCompany, useProducts, useTeam } from '@/lib/queries';
 
 export default function OrderScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -42,6 +45,11 @@ function OrderView({ bundle: b }: { bundle: OrderBundle }) {
   const products = useProducts(false).data ?? [];
   const stock = useFinishedStock().data ?? [];
   const setStage = useSetStage();
+  const company = useCompany();
+  const materialCost = useMaterialCost();
+  const rawLines = useRawStockLines();
+  const [marginSince] = useState(() => new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10));
+  const production = useProductionEntries(marginSince);
   const [msg, setMsg] = useState('');
   const [releasing, setReleasing] = useState(false);
 
@@ -113,6 +121,17 @@ function OrderView({ bundle: b }: { bundle: OrderBundle }) {
           <Row label="GST" value={formatInr(totals(b.items).gst)} />
           <Row label="Total" value={formatInr(totals(b.items).total)} bold />
         </Card>
+      ) : null}
+
+      {isOwner && b.items.length > 0 ? (
+        <MarginCard
+          bundle={b}
+          names={new Map(products.map((p) => [p.id, productName(p)]))}
+          cost={materialCost.data}
+          raw={rawLines.data}
+          entries={production.data}
+          overhead={company.data?.overhead_per_m ?? 0}
+        />
       ) : null}
 
       <Label style={{ marginLeft: Spacing.one }}>Despatches</Label>
@@ -235,6 +254,49 @@ function ReleaseForm({ bundle: b, onDone }: { bundle: OrderBundle; onDone: () =>
       <ErrorText>{msg}</ErrorText>
       <Button label="Release" onPress={submit} busy={release.isPending} disabled={drivers.length === 0} />
       <Button label="Cancel" variant="secondary" onPress={onDone} />
+    </Card>
+  );
+}
+
+function MarginCard({
+  bundle: b,
+  names,
+  cost,
+  raw,
+  entries,
+  overhead,
+}: {
+  bundle: OrderBundle;
+  names: Map<string, string>;
+  cost: Map<string, number> | undefined;
+  raw: { id: string; name: string }[] | undefined;
+  entries: import('@/lib/database.types').ProductionEntry[] | undefined;
+  overhead: number;
+}) {
+  if (!cost || !raw || !entries) return null;
+  const rate = (name: string) => {
+    const id = raw.find((r) => r.name === name)?.id;
+    return id ? (cost.get(id) ?? null) : null;
+  };
+  const perMetre = costPerMetre({ entries, resinRate: rate('Resin'), rovingRate: rate('Glass fibre roving'), overheadPerM: overhead });
+  const m = orderMargin(b.items.map((i) => ({ product_id: i.product_id, name: names.get(i.product_id) ?? 'Product', metres: i.metres, rate_per_m: i.rate_per_m })), perMetre);
+  if (!m) return null;
+  const noRates = rate('Resin') == null || rate('Glass fibre roving') == null;
+  return (
+    <Card style={{ gap: 8 }}>
+      <Body weight="semibold" size={16}>Margin, for you only</Body>
+      {m.missing.length === b.items.length ? (
+        <Body muted size={13}>No production has been entered for these products yet, so the cost is not known.</Body>
+      ) : (
+        <>
+          <Row label="Sale (before GST)" value={formatInr(m.revenue)} />
+          <Row label="Estimated cost" value={formatInr(m.cost)} />
+          <Row label="Margin" value={`${formatInr(m.margin)} · ${m.pct}%`} bold />
+        </>
+      )}
+      {m.missing.length > 0 && m.missing.length < b.items.length ? <Body size={12} style={{ color: '#8A4321' }}>Left out of the cost, no production yet: {m.missing.join(', ')}.</Body> : null}
+      {noRates ? <Body size={12} style={{ color: '#8A4321' }}>Resin or roving has no purchase price yet. Receive a purchase order to include it.</Body> : null}
+      <Body muted size={12}>Resin and roving at your average purchase price plus {formatInr(overhead)} per metre for other costs. Hardener and sand are not counted unless you include them in that figure.</Body>
     </Card>
   );
 }

@@ -5,7 +5,7 @@ import { Body, Button, Card, ErrorText, Label, Loading, Notice, Screen } from '@
 import { FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate, formatInr, formatNum } from '@/lib/calc';
-import { gstCsv, gstTotals } from '@/lib/ledger';
+import { gstCsv, gstTotals, purchaseTotals } from '@/lib/ledger';
 import { useGstMonth } from '@/lib/money-queries';
 import { useCompany } from '@/lib/queries';
 
@@ -23,11 +23,15 @@ export default function GstScreen() {
 
   const rows = (data?.invoices ?? []).map((invoice) => ({ invoice, party: data!.parties.find((p) => p.id === invoice.party_id) ?? null }));
   const t = gstTotals(rows);
+  const buys = (data?.purchases ?? []).map((po) => ({ po, supplier: data!.parties.find((p) => p.id === po.supplier_id) ?? null }));
+  const pt = purchaseTotals(buys);
+  const output = t.cgst + t.sgst + t.igst;
+  const input = pt.cgst + pt.sgst + pt.igst;
 
   async function share() {
     setMsg('');
     if (!company.data) return;
-    const csv = gstCsv(rows, data?.items ?? [], company.data, label);
+    const csv = gstCsv(rows, data?.items ?? [], company.data, label, buys);
     const name = `sales-register-${iso(cursor).slice(0, 7)}.csv`;
     try {
       if (Platform.OS === 'web') {
@@ -68,7 +72,9 @@ export default function GstScreen() {
         <Row2 label="CGST" value={money(t.cgst)} />
         <Row2 label="SGST" value={money(t.sgst)} />
         <Row2 label="IGST" value={money(t.igst)} />
-        <Row2 label="Output GST to pay (before input credit)" value={money(t.cgst + t.sgst + t.igst)} bold />
+        <Row2 label="Output GST (on sales)" value={money(output)} />
+        <Row2 label="Input GST (supplier bills)" value={`− ${money(input)}`} />
+        {output - input >= 0 ? <Row2 label="Net GST to pay" value={money(output - input)} bold /> : <Row2 label="Credit to carry forward" value={money(input - output)} bold />}
       </Card>
 
       <Label style={{ marginLeft: Spacing.one }}>Sales register</Label>
@@ -86,7 +92,23 @@ export default function GstScreen() {
 
       {rows.length > 0 ? <HsnSummary items={data?.items ?? []} ids={new Set(rows.map((r) => r.invoice.id))} /> : null}
 
-      <Notice>This is output tax only. Purchase invoices and input tax credit are not tracked yet. Your CA adds those.</Notice>
+      {buys.length > 0 ? (
+        <>
+          <Label style={{ marginLeft: Spacing.one }}>Supplier bills (input credit)</Label>
+          {buys.map((r) => (
+            <Card key={r.po.id} style={{ gap: 4 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
+                <Body weight="semibold" style={{ flex: 1 }}>{r.supplier?.name ?? 'Supplier'}</Body>
+                <Body weight="semibold">{money(r.po.total)}</Body>
+              </View>
+              <Body muted size={12}>Bill {r.po.supplier_bill_no} · {formatDate(r.po.supplier_bill_date)} · {r.supplier?.gstin ?? 'Unregistered'}</Body>
+              <Body muted size={12}>GST {r.po.is_interstate ? `IGST ${money(r.po.igst)}` : `CGST ${money(r.po.cgst)} · SGST ${money(r.po.sgst)}`}</Body>
+            </Card>
+          ))}
+        </>
+      ) : null}
+
+      <Notice>Input credit counts supplier bills received through purchase orders. It is only valid if the supplier is registered and has filed, so your CA confirms it before you claim it.</Notice>
       <ErrorText>{msg}</ErrorText>
       <Button label="Share as CSV for your CA" onPress={share} disabled={rows.length === 0} />
     </Screen>

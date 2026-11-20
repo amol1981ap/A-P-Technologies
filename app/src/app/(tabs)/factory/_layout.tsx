@@ -20,6 +20,9 @@ export default function FactoryLayout() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="production" options={{ title: 'Today’s production' }} />
       <Stack.Screen name="receive" options={{ title: 'Receive material' }} />
+      <Stack.Screen name="purchases" options={{ title: 'Purchase orders' }} />
+      <Stack.Screen name="po" options={{ title: 'Purchase order' }} />
+      <Stack.Screen name="tests" options={{ title: 'Batch tests' }} />
     </Stack>
   );
 }

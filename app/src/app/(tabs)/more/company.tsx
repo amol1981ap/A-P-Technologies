@@ -24,6 +24,7 @@ function CompanyForm({ data }: { data: CompanySettings }) {
   const [f, setF] = useState<Form>(
     () => Object.fromEntries(KEYS.map((k) => [k, (data[k as keyof CompanySettings] as string | null) ?? ''])) as Form,
   );
+  const [overhead, setOverhead] = useState(data.overhead_per_m ? String(data.overhead_per_m) : '');
   const [msg, setMsg] = useState('');
   const [saved, setSaved] = useState(false);
 
@@ -37,10 +38,12 @@ function CompanyForm({ data }: { data: CompanySettings }) {
     const gstin = f.gstin.trim().toUpperCase();
     if (gstin && !GSTIN_PATTERN.test(gstin)) return setMsg('GSTIN should be 15 characters, like 27ABCDE1234F1Z5.');
     if (!f.name.trim()) return setMsg('Enter the company name.');
+    if (overhead.trim() !== '' && !(Number(overhead) >= 0)) return setMsg('Other cost per metre must be zero or more.');
     try {
       await save.mutateAsync({
         ...Object.fromEntries(KEYS.map((k) => [k, blankToNull(f[k])])),
         name: f.name.trim(),
+        overhead_per_m: overhead.trim() === '' ? 0 : Number(overhead),
         gstin: gstin || null,
         // GSTIN starts with the state code.
         state_code: blankToNull(f.state_code) ?? (gstin ? gstin.slice(0, 2) : null),
@@ -90,6 +93,14 @@ function CompanyForm({ data }: { data: CompanySettings }) {
           placeholder="Delivery, payment, validity, freight…"
         />
       </Card>
+      {isOwner ? (
+        <>
+          <Label style={{ marginLeft: Spacing.one, marginTop: Spacing.two }}>Cost, for you only</Label>
+          <Card style={{ gap: Spacing.three }}>
+            <Field label="Other cost per metre (₹)" value={overhead} onChangeText={(v) => { setSaved(false); setOverhead(v); }} editable={e} keyboard="decimal-pad" hint="Labour, power, hardener, sand and packing, per metre. Added to resin and roving cost when working out each order's margin." />
+          </Card>
+        </>
+      ) : null}
       <ErrorText>{msg}</ErrorText>
       {saved ? <Notice>Saved.</Notice> : null}
       {isOwner ? <Button label="Save" onPress={submit} busy={save.isPending} /> : null}

@@ -23,6 +23,8 @@ export default function MoreLayout() {
       <Stack.Screen name="party" options={{ title: 'Party' }} />
       <Stack.Screen name="team" options={{ title: 'Team' }} />
       <Stack.Screen name="company" options={{ title: 'Company details' }} />
+      <Stack.Screen name="tasks" options={{ title: 'Tasks' }} />
+      <Stack.Screen name="task" options={{ title: 'Task' }} />
     </Stack>
   );
 }

@@ -1,6 +1,8 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { useAuth } from '@/lib/auth';
+
 import { BigNumber, Body, Button, Card, Chip, ErrorText, Header, Label, Loading, Meter, Row, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { formatNum } from '@/lib/calc';
@@ -11,6 +13,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const monthStart = () => `${new Date().toISOString().slice(0, 7)}-01`;
 
 export default function FactoryHome() {
+  const { isOwner } = useAuth();
   const stock = useFinishedStock();
   const raw = useRawStock();
   const month = useProductionEntries(monthStart());
@@ -96,6 +99,10 @@ export default function FactoryHome() {
         ))}
       </Card>
       <Button label="Receive material" variant="secondary" onPress={() => router.push('/factory/receive')} />
+      {isOwner ? <Button label="Purchase orders" variant="secondary" onPress={() => router.push('/factory/purchases')} /> : null}
+
+      <Label style={styles.section}>Quality</Label>
+      <Button label="Batch tests" variant="secondary" onPress={() => router.push('/factory/tests')} />
       <Body muted size={12} style={{ textAlign: 'center' }}>Alert when under {RAW_ALERT_DAYS} days left at the last two weeks’ usage.</Body>
     </Screen>
   );

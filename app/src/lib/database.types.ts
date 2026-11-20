@@ -36,6 +36,7 @@ export type CompanySettings = {
   city: string | null;
   state: string | null;
   state_code: string | null;
+  overhead_per_m: number;
   phone: string | null;
   whatsapp: string | null;
   email: string | null;
@@ -309,6 +310,48 @@ export type InvoiceBalance = {
   days_overdue: number | null;
 };
 
+export type PoStatus = 'ordered' | 'received' | 'cancelled';
+export type PurchaseOrder = {
+  id: string;
+  number: string;
+  supplier_id: string;
+  status: PoStatus;
+  order_date: string;
+  expected_date: string | null;
+  notes: string | null;
+  received_on: string | null;
+  supplier_bill_no: string | null;
+  supplier_bill_date: string | null;
+  is_interstate: boolean;
+  taxable_value: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  total: number;
+  paid_on: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type PurchaseOrderItem = { id: string; po_id: string; material_id: string; qty: number; rate: number; gst_percent: number };
+export type MaterialCost = { material_id: string | null; qty_received: number | null; avg_rate: number | null };
+export type BatchTest = { id: string; batch_no: string; tested_on: string; lab: string | null; report_no: string | null; notes: string | null; created_by: string | null; created_at: string };
+export type BatchTestValue = { id: string; test_id: string; property: string; value: string; unit: string | null; requirement: string | null; sort: number };
+export type TaskStatus = 'open' | 'done';
+export type Task = {
+  id: string;
+  title: string;
+  detail: string | null;
+  assigned_to: string;
+  due_date: string | null;
+  status: TaskStatus;
+  done_at: string | null;
+  proof_path: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -331,6 +374,11 @@ export type Database = {
       invoices: Table<Invoice, Pick<Invoice, 'party_id'> & Partial<Omit<Invoice, 'id' | 'party_id' | 'number' | 'created_at' | 'updated_at'>>>;
       invoice_items: Table<InvoiceItem, Omit<InvoiceItem, 'id'>>;
       payments: Table<Payment, Pick<Payment, 'party_id' | 'amount'> & Partial<Pick<Payment, 'invoice_id' | 'received_on' | 'mode' | 'reference'>>>;
+      purchase_orders: Table<PurchaseOrder, Pick<PurchaseOrder, 'supplier_id'> & Partial<Omit<PurchaseOrder, 'id' | 'number' | 'supplier_id' | 'created_at' | 'updated_at' | 'created_by'>>>;
+      purchase_order_items: Table<PurchaseOrderItem, Omit<PurchaseOrderItem, 'id'>>;
+      batch_tests: Table<BatchTest, Pick<BatchTest, 'batch_no'> & Partial<Omit<BatchTest, 'id' | 'batch_no' | 'created_at' | 'created_by'>>>;
+      batch_test_values: Table<BatchTestValue, Omit<BatchTestValue, 'id'>>;
+      tasks: Table<Task, Pick<Task, 'title' | 'assigned_to'> & Partial<Omit<Task, 'id' | 'title' | 'assigned_to' | 'created_at' | 'updated_at' | 'created_by'>>>;
       parties: Table<Party, Pick<Party, 'name'> & Partial<Omit<Party, 'id' | 'created_at' | 'updated_at' | 'created_by'>>>;
     };
     Views: {
@@ -338,6 +386,7 @@ export type Database = {
       finished_stock: { Row: FinishedStock; Relationships: [] };
       lead_performance: { Row: LeadPerformance; Relationships: [] };
       invoice_balances: { Row: InvoiceBalance; Relationships: [] };
+      material_cost: { Row: MaterialCost; Relationships: [] };
       raw_material_stock: { Row: RawMaterialStock; Relationships: [] };
     };
     Functions: { [_ in never]: never };
