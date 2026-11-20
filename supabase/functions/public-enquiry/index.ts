@@ -4,6 +4,17 @@ import { scoreLead } from '../_shared/scoring.ts';
 
 const clip = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '') || null;
 
+/** Maps the utm_source on an ad or post link to a lead source. Anything unknown stays "website". */
+function sourceFrom(raw: unknown) {
+  const s = (typeof raw === 'string' ? raw : '').trim().toLowerCase();
+  if (['instagram', 'ig'].includes(s)) return 'instagram' as const;
+  if (['facebook', 'fb', 'meta'].includes(s)) return 'facebook' as const;
+  if (s === 'whatsapp') return 'whatsapp' as const;
+  if (s === 'indiamart') return 'indiamart' as const;
+  if (['referral', 'ref'].includes(s)) return 'referral' as const;
+  return 'website' as const;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -32,7 +43,8 @@ Deno.serve(async (req) => {
     location: clip(b.location, 120),
     quantity_note: clip(b.qty, 200),
     notes: clip(b.message, 1000),
-    source: 'website' as const,
+    source: sourceFrom(b.utm_source),
+    campaign: clip(b.utm_campaign, 80),
   };
 
   const admin = adminClient();

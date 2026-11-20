@@ -63,10 +63,13 @@
         f.get('qty') ? 'Quantity: ' + f.get('qty') : null,
         f.get('message') ? 'Message: ' + f.get('message') : null
       ].filter(Boolean).join('\n');
+      var calcNote = (sel && qty && parseFloat(qty.value) > 0) ? 'Calculator: ' + sel.value + ' mm, ' + qty.value + ' t steel' : '';
       var payload = {
         name: f.get('name'), phone: f.get('phone'), company: f.get('company'), role: f.get('role'),
-        project: f.get('project'), location: f.get('location'), qty: f.get('qty'), message: f.get('message'),
-        website_url: f.get('website_url')
+        project: f.get('project'), location: f.get('location'), qty: f.get('qty'), message: [f.get('message'), calcNote].filter(Boolean).join(' | '),
+        website_url: f.get('website_url'),
+        utm_source: utm.utm_source,
+        utm_campaign: utm.utm_campaign
       };
       var haveWa = /^\d{10,15}$/.test(num);
       var btn = form.querySelector('button[type="submit"]');
@@ -93,6 +96,17 @@
       }).then(function () { btn.disabled = false; });
     });
   }
+
+  // Remember where the visitor came from (utm_source / utm_campaign on ad and post links).
+  var utm = { utm_source: '', utm_campaign: '' };
+  try {
+    var q = new URLSearchParams(window.location.search);
+    ['utm_source', 'utm_campaign'].forEach(function (k) {
+      var v = q.get(k);
+      if (v) sessionStorage.setItem('cc_' + k, v.slice(0, 80));
+      utm[k] = sessionStorage.getItem('cc_' + k) || '';
+    });
+  } catch (e) {}
 
   var y = document.getElementById('year');
   if (y) y.textContent = new Date().getFullYear();

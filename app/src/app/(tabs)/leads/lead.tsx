@@ -6,7 +6,7 @@ import { Body, Button, Card, Chip, ChipPicker, ErrorText, Field, Label, Loading,
 import { Spacing } from '@/constants/theme';
 import { waNumber } from '@/lib/calc';
 import type { Lead, LeadScore, LeadSource } from '@/lib/database.types';
-import { blankToNull, useCompany } from '@/lib/queries';
+import { blankToNull, useCompany, useParties } from '@/lib/queries';
 import { scoreLead } from '@/lib/scoring';
 import {
   LEAD_SOURCE_LABEL,
@@ -36,6 +36,7 @@ function LeadForm({ existing }: { existing: Lead | null }) {
   const createQuote = useCreateQuoteFromLead();
   const company = useCompany();
   const quotes = useQuotes();
+  const consultants = useParties('consultant');
 
   const [name, setName] = useState(existing?.contact_name ?? '');
   const [org, setOrg] = useState(existing?.company ?? '');
@@ -46,6 +47,8 @@ function LeadForm({ existing }: { existing: Lead | null }) {
   const [qty, setQty] = useState(existing?.quantity_note ?? '');
   const [source, setSource] = useState<LeadSource>(existing?.source ?? 'phone');
   const [notes, setNotes] = useState(existing?.notes ?? '');
+  const [campaign, setCampaign] = useState(existing?.campaign ?? '');
+  const [influencer, setInfluencer] = useState<string | null>(existing?.influencer_id ?? null);
   const [score, setScore] = useState<LeadScore | 'auto'>(existing?.score ?? 'auto');
   const [lostReason, setLostReason] = useState('');
   const [msg, setMsg] = useState('');
@@ -67,6 +70,8 @@ function LeadForm({ existing }: { existing: Lead | null }) {
       quantity_note: blankToNull(qty),
       notes: blankToNull(notes),
       source,
+      campaign: blankToNull(campaign),
+      influencer_id: influencer,
     };
     try {
       await save.mutateAsync({
@@ -164,6 +169,15 @@ function LeadForm({ existing }: { existing: Lead | null }) {
         <Field label="Location" value={location} onChangeText={setLocation} autoCapitalize="words" placeholder="City, State" />
         <Field label="Quantity" value={qty} onChangeText={setQty} placeholder="e.g. 8,000 m of 12 mm" />
         <ChipPicker label="Came from" options={SOURCES} value={source} onChange={setSource} />
+        <Field label="Campaign (optional)" value={campaign} onChangeText={setCampaign} placeholder="Name of the ad or post" />
+        {(consultants.data ?? []).length > 0 ? (
+          <ChipPicker
+            label="Specified or recommended by"
+            options={[{ value: '', label: 'No one' }, ...(consultants.data ?? []).map((c) => ({ value: c.id, label: c.name }))]}
+            value={influencer ?? ''}
+            onChange={(v) => setInfluencer(v === '' ? null : v)}
+          />
+        ) : null}
         <Field label="Notes" value={notes} onChangeText={setNotes} multiline />
         <Segmented
           label="Priority"

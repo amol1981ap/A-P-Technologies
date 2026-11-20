@@ -109,6 +109,8 @@ export type Lead = {
   assigned_to: string | null;
   next_follow_up: string | null;
   notes: string | null;
+  campaign: string | null;
+  influencer_id: string | null;
   lost_reason: string | null;
   created_by: string | null;
   created_at: string;
@@ -212,6 +214,38 @@ export type RawMaterialMovement = {
 export type FinishedStock = { product_id: string | null; produced_m: number | null; despatched_m: number | null; on_hand_m: number | null; reorder_level_m: number | null };
 export type RawMaterialStock = { material_id: string | null; name: string | null; unit: string | null; sort: number | null; on_hand: number | null; avg_daily_use: number | null };
 
+export type ProspectStatus = 'new' | 'contacted' | 'interested' | 'converted' | 'dropped';
+export type Prospect = {
+  id: string;
+  name: string;
+  organisation: string | null;
+  role: string | null;
+  location: string | null;
+  phone: string | null;
+  project_note: string | null;
+  found_via: string | null;
+  status: ProspectStatus;
+  next_action_date: string | null;
+  last_contacted: string | null;
+  lead_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type MarketingSpend = { id: string; month: string; source: LeadSource; amount: number; note: string | null; created_by: string | null; created_at: string };
+export type LeadPerformance = {
+  lead_id: string | null;
+  source: LeadSource | null;
+  campaign: string | null;
+  influencer_id: string | null;
+  score: LeadScore | null;
+  status: LeadStatus | null;
+  created_at: string | null;
+  quoted: boolean | null;
+  ordered: boolean | null;
+  order_value: number | null;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -229,11 +263,14 @@ export type Database = {
       production_entries: Table<ProductionEntry, Pick<ProductionEntry, 'product_id' | 'good_m'> & Partial<Omit<ProductionEntry, 'id' | 'product_id' | 'good_m' | 'batch_no' | 'created_at' | 'updated_at' | 'created_by'>>>;
       raw_materials: Table<RawMaterial, Partial<RawMaterial>>;
       raw_material_movements: Table<RawMaterialMovement, Pick<RawMaterialMovement, 'material_id' | 'qty' | 'kind'> & Partial<Pick<RawMaterialMovement, 'movement_date' | 'note'>>>;
+      marketing_spend: Table<MarketingSpend, Pick<MarketingSpend, 'month' | 'source' | 'amount'> & Partial<Pick<MarketingSpend, 'note'>>>;
+      prospects: Table<Prospect, Pick<Prospect, 'name'> & Partial<Omit<Prospect, 'id' | 'name' | 'created_at' | 'updated_at' | 'created_by'>>>;
       parties: Table<Party, Pick<Party, 'name'> & Partial<Omit<Party, 'id' | 'created_at' | 'updated_at' | 'created_by'>>>;
     };
     Views: {
       current_rates: { Row: CurrentRate; Relationships: [] };
       finished_stock: { Row: FinishedStock; Relationships: [] };
+      lead_performance: { Row: LeadPerformance; Relationships: [] };
       raw_material_stock: { Row: RawMaterialStock; Relationships: [] };
     };
     Functions: { [_ in never]: never };

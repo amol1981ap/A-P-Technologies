@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { GrowthView } from '@/components/growth-view';
 import { Body, Card, Chip, Empty, ErrorText, Header, Loading, Screen, Segmented, type Tone } from '@/components/ui';
 import { FontFamily, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -10,7 +11,7 @@ import type { Lead, LeadScore } from '@/lib/database.types';
 import { followUpState } from '@/lib/followups';
 import { LEAD_SOURCE_LABEL, QUOTE_STATUS_LABEL, useLeads, useQuotes, type QuoteListItem } from '@/lib/sales-queries';
 
-type View_ = 'leads' | 'quotes';
+type View_ = 'leads' | 'quotes' | 'growth';
 type Filter = 'open' | LeadScore | 'closed';
 
 const SCORE_TONE: Record<LeadScore, Tone> = { hot: 'attention', warm: 'calm', cold: 'neutral' };
@@ -23,7 +24,7 @@ export default function LeadsHome() {
     <Screen>
       <Header
         eyebrow="Sales"
-        title={view === 'leads' ? 'Leads' : 'Quotes'}
+        title={view === 'leads' ? 'Leads' : view === 'quotes' ? 'Quotes' : 'Growth'}
         right={
           view === 'leads' ? (
             <Pressable
@@ -40,11 +41,12 @@ export default function LeadsHome() {
         options={[
           { value: 'leads', label: 'Leads' },
           { value: 'quotes', label: 'Quotes' },
+          { value: 'growth', label: 'Growth' },
         ]}
         value={view}
         onChange={setView}
       />
-      {view === 'leads' ? <LeadList /> : <QuoteList />}
+      {view === 'leads' ? <LeadList /> : view === 'quotes' ? <QuoteList /> : <GrowthView />}
     </Screen>
   );
 }

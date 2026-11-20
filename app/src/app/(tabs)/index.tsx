@@ -10,6 +10,7 @@ import { formatInr, formatNum, isPriced, totals } from '@/lib/calc';
 import { followUpState } from '@/lib/followups';
 import { useDespatches, useFinishedStock, useOrders, useProductionEntries, useRawStock } from '@/lib/ops-queries';
 import { productName } from '@/lib/queries';
+import { useProspects } from '@/lib/growth-queries';
 import { useLeads, useQuotes } from '@/lib/sales-queries';
 
 function todayLabel() {
@@ -109,6 +110,7 @@ function SalesToday({ firstName }: { firstName: string }) {
   const orders = useOrders();
   const stock = useFinishedStock();
   const raw = useRawStock();
+  const prospects = useProspects();
 
   const view = useMemo(() => {
     const ls = leads.data ?? [];
@@ -155,6 +157,19 @@ function SalesToday({ firstName }: { firstName: string }) {
         rank: l.score === 'hot' ? 1.5 : 3,
       });
     }
+    const today = new Date().toISOString().slice(0, 10);
+    const dueProspects = (prospects.data ?? []).filter((x) => x.next_action_date && x.next_action_date <= today && x.status !== 'converted' && x.status !== 'dropped');
+    if (dueProspects.length > 0) {
+      needs.push({
+        id: 'prospects',
+        title: `${dueProspects.length} prospect${dueProspects.length === 1 ? '' : 's'} to contact`,
+        detail: dueProspects.slice(0, 2).map((x) => x.name).join(', ') + (dueProspects.length > 2 ? '…' : ''),
+        action: 'Open',
+        tone: 'calm',
+        go: () => router.push('/leads/prospects'),
+        rank: 2.8,
+      });
+    }
     if (isOwner) {
       for (const b of orders.data ?? []) {
         const o = b.order;
@@ -192,7 +207,7 @@ function SalesToday({ firstName }: { firstName: string }) {
       sentValue,
       followUpsDue: sent.filter((x) => followUpState(x.quote)?.due).length,
     };
-  }, [leads.data, quotes.data, orders.data, stock.data, raw.data, isOwner]);
+  }, [leads.data, quotes.data, orders.data, stock.data, raw.data, prospects.data, isOwner]);
 
   const loading = leads.isLoading || quotes.isLoading;
 

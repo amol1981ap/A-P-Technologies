@@ -20,6 +20,8 @@ export default function LeadsLayout() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="lead" options={{ title: 'Lead' }} />
       <Stack.Screen name="quote" options={{ title: 'Quote' }} />
+      <Stack.Screen name="prospects" options={{ title: 'Prospects' }} />
+      <Stack.Screen name="calculator" options={{ title: 'Steel vs GFRP' }} />
     </Stack>
   );
 }
