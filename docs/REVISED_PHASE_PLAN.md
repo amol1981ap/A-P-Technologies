@@ -140,7 +140,7 @@ The blueprint itself flags this: 2 leads cannot produce 10 quotes, and "0 out of
 ## 6. Open items from Amol
 - WhatsApp number, address and GSTIN for the website (`website/config.js` and footer)
 - Domain name (e.g. aptechnologies.in) for hosting the site
-- Diameters and standard lengths actually offered (currently 6–32 mm, 6 m / 12 m)
+- Diameters and standard lengths actually offered (currently 8–24 mm, 6 m / 12 m)
 - Rate card, TMT→GFRP logic, quotation format
 - Product photos and test certificate (to add to the site)
 

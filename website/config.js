@@ -6,6 +6,6 @@ window.SITE_CONFIG = {
   // WhatsApp number with country code, digits only (e.g. "919876543210").
   whatsappNumber: "91XXXXXXXXXX",
   // Diameters offered, in mm, and standard bar length in metres.
-  diameters: [6, 8, 10, 12, 16, 20, 25, 32],
+  diameters: [8, 10, 12, 16, 18, 20, 22, 24],
   standardLength: "6 m / 12 m / custom"
 };

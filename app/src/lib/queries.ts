@@ -51,7 +51,7 @@ export function useSaveProduct() {
 }
 
 /** Adds the usual GFRP diameters for one surface in one go. Skips any that already exist. */
-export const STANDARD_DIAMETERS = [6, 8, 10, 12, 16, 20, 25, 32];
+export const STANDARD_DIAMETERS = [8, 10, 12, 16, 18, 20, 22, 24];
 export function useAddStandardSizes() {
   const qc = useQueryClient();
   return useMutation({

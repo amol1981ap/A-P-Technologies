@@ -1,7 +1,7 @@
 /** Weights, money and date helpers shared by quotes, PDFs and screens. */
 
 /** Typical GFRP bar density. Actual weight comes from the batch test certificate. */
-export const GFRP_DENSITY_KG_M3 = 2100;
+export const GFRP_DENSITY_KG_M3 = 2000;
 
 /** Weight per metre of a steel bar of nominal diameter d (mm): d² / 162. */
 export const steelKgPerM = (d: number) => (d * d) / 162;
