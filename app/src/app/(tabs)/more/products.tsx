@@ -6,7 +6,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/lib/auth';
 import type { RebarSurface } from '@/lib/database.types';
-import { blankToNull, productName, useProducts, useSaveProduct, useSetRate, type ProductWithRate } from '@/lib/queries';
+import { blankToNull, productName, STANDARD_DIAMETERS, useAddStandardSizes, useProducts, useSaveProduct, useSetRate, type ProductWithRate } from '@/lib/queries';
 
 const SURFACES: { value: RebarSurface; label: string }[] = [
   { value: 'sand_coated', label: 'Sand-coated' },
@@ -18,6 +18,8 @@ export default function ProductsScreen() {
   const { data, isLoading, error } = useProducts(isOwner);
   const [adding, setAdding] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const addStandard = useAddStandardSizes();
+  const [bulkMsg, setBulkMsg] = useState('');
 
   return (
     <Screen nested>
@@ -30,6 +32,29 @@ export default function ProductsScreen() {
 
       {data && data.length === 0 && !adding ? (
         <Empty title="No products yet" detail={isOwner ? 'Add each diameter and surface you sell.' : 'The owner has not added products yet.'} />
+      ) : null}
+
+      {isOwner && data && data.length < 4 && !adding ? (
+        <Card style={{ gap: Spacing.three }}>
+          <Body weight="semibold">Quick start</Body>
+          <Body muted size={13}>Add the usual diameters ({STANDARD_DIAMETERS.join(', ')} mm) in one tap, then set a rate on each. Switch off any you do not sell.</Body>
+          <ErrorText>{bulkMsg}</ErrorText>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            {SURFACES.map((s) => (
+              <View key={s.value} style={{ flex: 1 }}>
+                <Button
+                  label={`Add ${s.label.toLowerCase()}`}
+                  variant="secondary"
+                  busy={addStandard.isPending}
+                  onPress={() => {
+                    setBulkMsg('');
+                    addStandard.mutate(s.value, { onError: (e) => setBulkMsg(e.message) });
+                  }}
+                />
+              </View>
+            ))}
+          </View>
+        </Card>
       ) : null}
 
       {data?.map((p) => (

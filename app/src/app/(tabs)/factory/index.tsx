@@ -5,11 +5,11 @@ import { useAuth } from '@/lib/auth';
 
 import { BigNumber, Body, Button, Card, Chip, ErrorText, Header, Label, Loading, Meter, Row, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
-import { formatNum } from '@/lib/calc';
+import { formatNum, addDaysIso } from '@/lib/calc';
 import { RAW_ALERT_DAYS, useFinishedStock, useProductionEntries, useRawStock } from '@/lib/ops-queries';
 import { productName } from '@/lib/queries';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => addDaysIso(0);
 const monthStart = () => `${new Date().toISOString().slice(0, 7)}-01`;
 
 export default function FactoryHome() {

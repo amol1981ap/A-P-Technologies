@@ -24,6 +24,7 @@ export default function MoreLayout() {
       <Stack.Screen name="team" options={{ title: 'Team' }} />
       <Stack.Screen name="company" options={{ title: 'Company details' }} />
       <Stack.Screen name="tasks" options={{ title: 'Tasks' }} />
+      <Stack.Screen name="password" options={{ title: 'Change password' }} />
       <Stack.Screen name="task" options={{ title: 'Task' }} />
     </Stack>
   );

@@ -50,6 +50,19 @@ export function useSaveProduct() {
   });
 }
 
+/** Adds the usual GFRP diameters for one surface in one go. Skips any that already exist. */
+export const STANDARD_DIAMETERS = [6, 8, 10, 12, 16, 20, 25, 32];
+export function useAddStandardSizes() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (surface: RebarSurface) => {
+      const rows = STANDARD_DIAMETERS.map((d) => ({ diameter_mm: d, surface, standard_length_m: 12 }));
+      unwrap(await supabase.from('products').upsert(rows, { onConflict: 'diameter_mm,surface', ignoreDuplicates: true }).select());
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['products'] }),
+  });
+}
+
 export function useSetRate() {
   const qc = useQueryClient();
   return useMutation({

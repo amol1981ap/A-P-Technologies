@@ -1,0 +1,27 @@
+# Audit before deployment (all phases)
+
+## Checked
+- **Security (real logins for all 4 roles + anonymous):** sales cannot see rates, invoices, payments, purchases or spend; despatch and factory cannot see any prices; nobody can promote their own role; anonymous visitors see nothing. Advisor: no issues.
+- **Business rules:** unpriced quote cannot be sent; payments cannot exceed balance or be zero/negative; paid invoice cannot be cancelled; issued invoice is frozen; PO cannot be received without a supplier bill number; despatch delivered flips the order to Delivered.
+- **Maths:** GST split (CGST+SGST / IGST), rounding to the rupee, amount in words, financial-year numbering, margin.
+- **Screens:** every screen for every role loads with no errors; first-day experience on an empty system.
+
+## Fixed in this audit
+1. Sales could change GST % on lines (only the rate was locked). Now owner-only in the database.
+2. Any team member could edit orders. Now owner and sales only.
+3. One despatch could be invoiced twice. Now blocked.
+4. Nobody could change their own password (owner forgetting it meant lock-out). Added More › Change password.
+5. Flash of "Waiting for access" right after sign-in; bad network at start looked like "no access". Fixed with a spinner and a clear "could not reach the server" message.
+6. Today list showed only 8 items with no way to see the rest (a 9th overdue payment was invisible). Added "Show all".
+7. Dates used UTC, wrong between midnight and 5:30 am (production date, prospects due). Now local date.
+8. Order creation from a quote left an empty order behind if saving lines failed. Now rolled back.
+9. Shared PDFs had random file names; CA sheet was pasted text. Now named (Q-0001.pdf) and a real CSV file.
+10. iOS keyboard could cover fields; "One Rupees" wording.
+11. Day-one help: "Get set up" checklist on the owner's Today; one-tap "add standard sizes" for products.
+
+## Known limits (not changed)
+- No push notifications: reminders and "Needs you" show only when the app is opened.
+- Stock may go negative if usage is entered above stock; releasing more than stock only warns.
+- If an order has the same product on two lines at different rates, the invoice uses the first rate.
+- Public website form: same phone within a day is merged; no other spam limit.
+- Dates assume India time.

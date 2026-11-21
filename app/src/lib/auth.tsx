@@ -7,6 +7,7 @@ import { supabase } from './supabase';
 
 type AuthState = {
   ready: boolean;
+  profileError: boolean;
   session: Session | null;
   profile: Profile | null;
   role: AppRole | null;
@@ -22,14 +23,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileError, setProfileError] = useState(false);
+  // Signed in but the profile has not come back yet: show nothing rather than "waiting for access".
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const loadProfile = useCallback(async (s: Session | null) => {
     if (!s) {
       setProfile(null);
+      setProfileError(false);
+      setProfileLoading(false);
       return;
     }
-    const { data } = await supabase.from('profiles').select('*').eq('id', s.user.id).maybeSingle();
-    setProfile(data ?? null);
+    setProfileLoading(true);
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', s.user.id).maybeSingle();
+    setProfileError(!!error);
+    if (!error) setProfile(data ?? null);
+    setProfileLoading(false);
   }, []);
 
   useEffect(() => {
@@ -42,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
+      if (s) setProfileLoading(true);
       // Defer the query so it doesn't run inside the auth callback.
       setTimeout(() => loadProfile(s), 0);
     });
@@ -68,8 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthState>(() => {
     const role = profile?.active ? profile.role : null;
-    return { ready, session, profile, role, isOwner: role === 'owner', signIn, signOut, refreshProfile };
-  }, [ready, session, profile, signIn, signOut, refreshProfile]);
+    return { ready: ready && !(session && profileLoading && !profile), profileError, session, profile, role, isOwner: role === 'owner', signIn, signOut, refreshProfile };
+  }, [ready, profileLoading, profileError, session, profile, signIn, signOut, refreshProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

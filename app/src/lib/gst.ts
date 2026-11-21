@@ -82,7 +82,7 @@ export function rupeesInWords(amount: number): string {
   if (lakh) words.push(`${below1000(lakh)} Lakh`);
   if (thousand) words.push(`${below1000(thousand)} Thousand`);
   if (rest) words.push(below1000(rest));
-  let out = rupees > 0 ? `${words.join(' ')} Rupees` : '';
+  let out = rupees > 0 ? `${words.join(' ')} ${rupees === 1 ? 'Rupee' : 'Rupees'}` : '';
   if (paise) out += `${out ? ' and ' : ''}${below1000(paise)} Paise`;
   return `${out} Only`;
 }

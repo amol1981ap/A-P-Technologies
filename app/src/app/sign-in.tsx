@@ -55,7 +55,7 @@ export default function SignInScreen() {
         <Body muted size={13} style={{ textAlign: 'center' }}>
           Forgot your password? Ask the owner to reset it.
         </Body>
-        <TextLink label="First time? Set up the owner account" onPress={() => setSetup(true)} />
+        <TextLink label="Business owner? First-time setup" onPress={() => setSetup(true)} />
       </Screen>
     </KeyboardAvoidingView>
   );

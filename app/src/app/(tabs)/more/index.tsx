@@ -41,6 +41,10 @@ export default function MoreScreen() {
         {isOwner ? <LinkRow title="Team" detail="Add people and set what they can see" onPress={() => router.push('/more/team')} /> : null}
       </Card>
 
+      <Card style={{ paddingVertical: Spacing.one, marginTop: Spacing.two }}>
+        <LinkRow first title="Change password" detail="Pick a new password for your login" onPress={() => router.push('/more/password')} />
+      </Card>
+
       <View style={{ marginTop: Spacing.three }}>
         <Button label="Sign out" variant="secondary" onPress={signOut} />
       </View>

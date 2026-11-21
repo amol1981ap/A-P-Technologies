@@ -1,15 +1,15 @@
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { BigNumber, Body, Button, Card, Empty, Header, Label, Loading, Row, Screen, type Tone } from '@/components/ui';
 import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/lib/auth';
-import { formatInr, formatNum, isPriced, totals } from '@/lib/calc';
+import { addDaysIso, formatInr, formatNum, isPriced, totals } from '@/lib/calc';
 import { followUpState } from '@/lib/followups';
 import { useDespatches, useFinishedStock, useOrders, useProductionEntries, useRawStock } from '@/lib/ops-queries';
-import { productName, useTeam } from '@/lib/queries';
+import { productName, useCompany, useProducts, useTeam } from '@/lib/queries';
 import { MyTasks } from '@/components/my-tasks';
 import { useProspects } from '@/lib/growth-queries';
 import { taskState, useTasks } from '@/lib/tasks-queries';
@@ -69,7 +69,7 @@ function DespatchToday({ firstName }: { firstName: string }) {
 
 function FactoryToday({ firstName }: { firstName: string }) {
   const c = useTheme();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = addDaysIso(0);
   const entries = useProductionEntries(today);
   const stock = useFinishedStock();
   const raw = useRawStock();
@@ -122,6 +122,7 @@ function SalesToday({ firstName }: { firstName: string }) {
   const team = useTeam();
   const { profile } = useAuth();
   const uninvoiced = useUninvoiced();
+  const [showAll, setShowAll] = useState(false);
 
   const view = useMemo(() => {
     const ls = leads.data ?? [];
@@ -168,7 +169,7 @@ function SalesToday({ firstName }: { firstName: string }) {
         rank: l.score === 'hot' ? 1.5 : 3,
       });
     }
-    const today = new Date().toISOString().slice(0, 10);
+    const today = addDaysIso(0);
     const dueProspects = (prospects.data ?? []).filter((x) => x.next_action_date && x.next_action_date <= today && x.status !== 'converted' && x.status !== 'dropped');
     if (dueProspects.length > 0) {
       needs.push({
@@ -259,6 +260,8 @@ function SalesToday({ firstName }: { firstName: string }) {
     <Screen>
       <Header eyebrow={todayLabel()} title={`${greeting()}, ${firstName}`} />
 
+      {isOwner ? <SetupCard /> : null}
+
       <View style={[styles.hero, { backgroundColor: c.primary }]}>
         <Text style={[styles.heroLabel, { color: c.heroSubtext }]}>Quotes out with customers</Text>
         <Text style={[styles.heroValue, { color: c.onPrimary }]}>{formatInr(view.sentValue).replace(/\.00$/, '')}</Text>
@@ -292,7 +295,7 @@ function SalesToday({ firstName }: { firstName: string }) {
       ) : null}
       {view.needs.length > 0 ? (
         <Card style={{ paddingVertical: Spacing.one }}>
-          {view.needs.slice(0, 8).map((n, i) => (
+          {(showAll ? view.needs : view.needs.slice(0, 8)).map((n, i) => (
             <Row key={`${n.id}-${n.title}`} first={i === 0}>
               <View style={[styles.dot, { backgroundColor: n.tone === 'attention' ? c.attention : c.primary }]} />
               <View style={{ flex: 1, gap: 2 }}>
@@ -304,8 +307,38 @@ function SalesToday({ firstName }: { firstName: string }) {
           ))}
         </Card>
       ) : null}
+      {view.needs.length > 8 ? <Button label={showAll ? 'Show fewer' : `Show all ${view.needs.length}`} variant="secondary" onPress={() => setShowAll((v) => !v)} /> : null}
 
     </Screen>
+  );
+}
+
+/** First-week checklist for the owner. Disappears once the basics are in. */
+function SetupCard() {
+  const company = useCompany();
+  const products = useProducts(true);
+  const team = useTeam();
+  if (!company.data || !products.data || !team.data) return null;
+  const c = company.data;
+  const steps = [
+    { done: !!(c.phone && c.bank_account && c.quote_terms), title: 'Company details', detail: 'Phone, bank account and quote terms appear on every quote and invoice', go: '/more/company' },
+    { done: products.data.some((p) => p.rate_per_m != null && p.hsn_code), title: 'Products and rates', detail: 'Add your diameters, set a rate and the HSN code for each', go: '/more/products' },
+    { done: team.data.some((t) => t.role !== 'owner' && t.active), title: 'Your team', detail: 'Add sales, despatch and factory people with their mobile numbers', go: '/more/team' },
+  ];
+  if (steps.every((x) => x.done)) return null;
+  return (
+    <Card style={{ gap: Spacing.three }}>
+      <Body weight="semibold" size={16}>Get set up · {steps.filter((x) => x.done).length} of {steps.length} done</Body>
+      {steps.map((x) => (
+        <View key={x.title} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Body weight="medium" muted={x.done}>{x.done ? '✓ ' : ''}{x.title}</Body>
+            {x.done ? null : <Body muted size={13}>{x.detail}</Body>}
+          </View>
+          {x.done ? null : <Button label="Open" size="small" variant="secondary" onPress={() => router.push(x.go as never)} />}
+        </View>
+      ))}
+    </Card>
   );
 }
 

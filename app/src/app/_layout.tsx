@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -18,6 +19,7 @@ SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
   const { ready, session, profile } = useAuth();
+  const c = Colors[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const signedIn = !!session;
   const approved = signedIn && !!profile?.active;
 
@@ -25,7 +27,14 @@ function RootNavigator() {
     if (ready) SplashScreen.hideAsync();
   }, [ready]);
 
-  if (!ready) return null;
+  if (!ready) {
+    // Signing in: show a spinner rather than a blank screen while the profile loads.
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.background }}>
+        <ActivityIndicator color={c.primary} />
+      </View>
+    );
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

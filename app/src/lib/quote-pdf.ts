@@ -1,3 +1,4 @@
+import { File, Paths } from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
@@ -87,10 +88,40 @@ export async function shareQuotePdf(html: string, fileLabel: string) {
     await Print.printAsync({ html });
     return;
   }
-  const { uri } = await Print.printToFileAsync({ html, width: 595, height: 842 });
+  const printed = await Print.printToFileAsync({ html, width: 595, height: 842 });
+  const uri = namedFile(printed.uri, `${fileLabel.replace(/[^A-Za-z0-9._-]+/g, '-')}.pdf`);
   if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: `Quotation ${fileLabel}` });
+    await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: fileLabel });
   } else {
     await Print.printAsync({ uri });
   }
+}
+
+/** Gives a generated file a readable name (Q-0012.pdf, not a random one). Falls back to the original path. */
+export function namedFile(uri: string, name: string): string {
+  try {
+    const f = new File(uri);
+    f.rename(name);
+    return f.uri;
+  } catch {
+    return uri;
+  }
+}
+
+/** Shares a CSV as a real file (phones) or downloads it (browser). */
+export async function shareCsv(csv: string, name: string) {
+  if (Platform.OS === 'web') {
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+    return;
+  }
+  const f = new File(Paths.cache, name);
+  if (f.exists) f.delete();
+  f.create();
+  f.write(csv);
+  await Sharing.shareAsync(f.uri, { mimeType: 'text/csv', dialogTitle: name });
 }

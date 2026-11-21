@@ -8,7 +8,8 @@ import type { ProductionEntry } from '@/lib/database.types';
 import { useFinishedStock, useProductionEntries, useSaveProduction } from '@/lib/ops-queries';
 import { blankToNull, productName } from '@/lib/queries';
 
-const today = () => new Date().toISOString().slice(0, 10);
+import { addDaysIso } from '@/lib/calc';
+const today = () => addDaysIso(0);
 const num = (s: string) => (s.trim() === '' ? null : Number(s));
 
 export default function ProductionScreen() {

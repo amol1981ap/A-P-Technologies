@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Platform, Pressable, Share, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { Body, Button, Card, ErrorText, Label, Loading, Notice, Screen } from '@/components/ui';
 import { FontFamily, Spacing } from '@/constants/theme';
@@ -8,6 +8,7 @@ import { formatDate, formatInr, formatNum } from '@/lib/calc';
 import { gstCsv, gstTotals, purchaseTotals } from '@/lib/ledger';
 import { useGstMonth } from '@/lib/money-queries';
 import { useCompany } from '@/lib/queries';
+import { shareCsv } from '@/lib/quote-pdf';
 
 const money = (n: number) => formatInr(n);
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
@@ -34,16 +35,7 @@ export default function GstScreen() {
     const csv = gstCsv(rows, data?.items ?? [], company.data, label, buys);
     const name = `sales-register-${iso(cursor).slice(0, 7)}.csv`;
     try {
-      if (Platform.OS === 'web') {
-        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = name;
-        a.click();
-        URL.revokeObjectURL(url);
-      } else {
-        await Share.share({ title: name, message: csv });
-      }
+      await shareCsv(csv, name);
     } catch (e) {
       setMsg((e as Error).message);
     }

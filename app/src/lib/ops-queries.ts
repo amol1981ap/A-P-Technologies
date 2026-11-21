@@ -98,12 +98,18 @@ export function useCreateOrderFromQuote() {
           .select()
           .single(),
       );
-      unwrap(
-        await supabase
-          .from('order_items')
-          .insert(items.map((i) => ({ order_id: order.id, product_id: i.product_id, metres: i.metres, rate_per_m: i.rate_per_m, gst_percent: i.gst_percent })))
-          .select(),
-      );
+      try {
+        unwrap(
+          await supabase
+            .from('order_items')
+            .insert(items.map((i) => ({ order_id: order.id, product_id: i.product_id, metres: i.metres, rate_per_m: i.rate_per_m, gst_percent: i.gst_percent })))
+            .select(),
+        );
+      } catch (e) {
+        // Don't leave an empty order behind that the next attempt would pick up.
+        await supabase.from('orders').delete().eq('id', order.id);
+        throw e;
+      }
       return order.id;
     },
     onSuccess: () => invalidate(qc),

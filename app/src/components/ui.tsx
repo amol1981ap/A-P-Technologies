@@ -30,6 +30,7 @@ export function Screen({ children, nested }: { children: ReactNode; nested?: boo
       <ScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
         contentInsetAdjustmentBehavior="automatic">
         <View style={[styles.column, nested && { paddingTop: Spacing.two }]}>{children}</View>
       </ScrollView>
