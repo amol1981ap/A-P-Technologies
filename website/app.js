@@ -3,10 +3,11 @@
   var dias = cfg.diameters || [8, 10, 12, 16, 18, 20, 22, 24];
 
   // Weight per metre (kg/m) from nominal diameter in mm.
-  // Steel: d²/162 (standard). GFRP: area × ~2,100 kg/m³ (typical density).
+  // Steel: d²/162 (standard). GFRP: manufacturer's table; sand-coated bars are 0.010 kg/m heavier.
   function steelKgPerM(d) { return (d * d) / 162; }
   var WT = { 8: 0.105, 10: 0.158, 12: 0.23, 16: 0.41, 18: 0.506, 20: 0.625, 22: 0.756, 24: 0.9 };
   function gfrpKgPerM(d) { return WT[d] || Math.PI / 4 * d * d * 1e-6 * 2000; }
+  function sandKgPerM(d) { return gfrpKgPerM(d) + 0.01; }
   function fmt(n, dp) { return n.toLocaleString('en-IN', { maximumFractionDigits: dp, minimumFractionDigits: dp }); }
 
   // Size table
@@ -30,7 +31,7 @@
       var t = parseFloat(qty.value);
       if (!(t > 0)) { outLen.textContent = outG.textContent = outS.textContent = '—'; return; }
       var metres = (t * 1000) / steelKgPerM(d);
-      var gT = metres * gfrpKgPerM(d) / 1000;
+      var gT = metres * sandKgPerM(d) / 1000; // sand-coated: the heavier, so the saving shown is not overstated
       outLen.textContent = fmt(Math.round(metres), 0) + ' m';
       outG.textContent = fmt(gT, 2) + ' tonnes';
       outS.textContent = fmt(t - gT, 2) + ' tonnes (' + Math.round((1 - gT / t) * 100) + '%)';
