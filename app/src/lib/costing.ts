@@ -1,5 +1,5 @@
 import type { ProductionEntry } from './database.types';
-import { round2 } from './calc';
+import { lineKg, round2 } from './calc';
 
 /**
  * Cost per metre of each product, from what its production runs actually used.
@@ -34,14 +34,14 @@ export type Margin = {
   missing: string[];
 };
 
-export function orderMargin(items: { product_id: string; name: string; metres: number; rate_per_m: number | null }[], perMetre: Map<string, number>): Margin | null {
-  const priced = items.filter((i) => i.rate_per_m != null);
+export function orderMargin(items: { product_id: string; name: string; metres: number; kg_per_m: number | null; rate_per_kg: number | null }[], perMetre: Map<string, number>): Margin | null {
+  const priced = items.filter((i) => i.rate_per_kg != null && i.kg_per_m != null);
   if (priced.length === 0) return null;
   let revenue = 0;
   let cost = 0;
   const missing: string[] = [];
   for (const i of priced) {
-    revenue += i.metres * (i.rate_per_m ?? 0);
+    revenue += lineKg(i) * (i.rate_per_kg ?? 0);
     const c = perMetre.get(i.product_id);
     if (c == null) missing.push(i.name);
     else cost += i.metres * c;

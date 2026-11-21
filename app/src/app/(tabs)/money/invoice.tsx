@@ -115,7 +115,7 @@ function InvoiceView({ d, company }: { d: InvoiceDetail; company: CompanySetting
               <Body weight="medium" style={{ flex: 1 }}>{i.description}</Body>
               <Body weight="medium">{formatInr(i.taxable)}</Body>
             </View>
-            <Body muted size={12}>{formatNum(i.metres, 2)} m × {formatInr(i.rate_per_m)} · HSN {i.hsn_code} · GST {i.gst_percent}%</Body>
+            <Body muted size={12}>{formatNum(i.kg, 3)} kg ({formatNum(i.metres, 2)} m) × {formatInr(i.rate_per_kg)}/kg · HSN {i.hsn_code} · GST {i.gst_percent}%</Body>
           </View>
         ))}
         <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 10, gap: 4 }}>

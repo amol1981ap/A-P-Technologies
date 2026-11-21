@@ -25,3 +25,11 @@
 - If an order has the same product on two lines at different rates, the invoice uses the first rate.
 - Public website form: same phone within a day is merged; no other spam limit.
 - Dates assume India time.
+
+## Pricing changed to per kg (owner decision after the audit)
+- Rate is ₹ per kg (₹150/kg onwards), GST 18% additional, HSN 70193900 (defaults on every new product).
+- Production, stock and despatch stay in metres. Kg on a quote, order or invoice = metres × weight per metre.
+- Each product has a weight per metre (typical estimate: 2,100 kg/m³ × cross-section, e.g. 0.2375 kg/m for 12 mm). The owner corrects it per product in More › Products & rates.
+- Each quote, order and invoice line stores the weight at the time, so changing a product's weight never changes an old document. Sales cannot override it.
+- Quotation and invoice PDFs show weight, ₹/kg, amount and GST; the GFRP-vs-steel table uses the product's weight.
+- Billing uses nominal weight, not a weighed figure. If bars are weighed at despatch, an "actual weight" entry can be added.

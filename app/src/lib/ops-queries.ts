@@ -102,7 +102,7 @@ export function useCreateOrderFromQuote() {
         unwrap(
           await supabase
             .from('order_items')
-            .insert(items.map((i) => ({ order_id: order.id, product_id: i.product_id, metres: i.metres, rate_per_m: i.rate_per_m, gst_percent: i.gst_percent })))
+            .insert(items.map((i) => ({ order_id: order.id, product_id: i.product_id, metres: i.metres, rate_per_kg: i.rate_per_kg, kg_per_m: i.kg_per_m, gst_percent: i.gst_percent })))
             .select(),
         );
       } catch (e) {

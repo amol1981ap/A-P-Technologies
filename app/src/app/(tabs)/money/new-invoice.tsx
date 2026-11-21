@@ -78,7 +78,7 @@ function Form({ u, company }: { u: Uninvoiced; company: CompanySettings }) {
               <Body weight="medium" style={{ flex: 1 }}>{l.description}</Body>
               <Body weight="medium">{formatInr(l.taxable)}</Body>
             </View>
-            <Body muted size={12}>{formatNum(l.metres, 2)} m × {formatInr(l.rate_per_m)} · HSN {l.hsn_code ?? '—'} · GST {l.gst_percent}%</Body>
+            <Body muted size={12}>{formatNum(l.kg, 3)} kg ({formatNum(l.metres, 2)} m) × {formatInr(l.rate_per_kg)}/kg · HSN {l.hsn_code ?? '—'} · GST {l.gst_percent}%</Body>
           </View>
         ))}
       </Card>

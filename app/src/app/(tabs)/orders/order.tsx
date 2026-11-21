@@ -279,7 +279,7 @@ function MarginCard({
     return id ? (cost.get(id) ?? null) : null;
   };
   const perMetre = costPerMetre({ entries, resinRate: rate('Resin'), rovingRate: rate('Glass fibre roving'), overheadPerM: overhead });
-  const m = orderMargin(b.items.map((i) => ({ product_id: i.product_id, name: names.get(i.product_id) ?? 'Product', metres: i.metres, rate_per_m: i.rate_per_m })), perMetre);
+  const m = orderMargin(b.items.map((i) => ({ product_id: i.product_id, name: names.get(i.product_id) ?? 'Product', metres: i.metres, kg_per_m: i.kg_per_m, rate_per_kg: i.rate_per_kg })), perMetre);
   if (!m) return null;
   const noRates = rate('Resin') == null || rate('Glass fibre roving') == null;
   return (

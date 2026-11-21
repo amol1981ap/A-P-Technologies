@@ -141,11 +141,11 @@ export function linesFromDespatch(u: Uninvoiced): { lines: InvoiceLineInput[]; m
     const p = u.products.find((x) => x.id === pid);
     const oi = u.orderItems.find((x) => x.product_id === pid);
     const name = p ? `GFRP rebar, ${p.diameter_mm} mm ${p.surface === 'sand_coated' ? 'sand-coated' : 'ribbed'}` : 'GFRP rebar';
-    if (!oi || oi.rate_per_m == null || oi.gst_percent == null) {
+    if (!oi || oi.rate_per_kg == null || oi.kg_per_m == null || oi.gst_percent == null) {
       missing.push(`${name}: no rate on the order`);
       continue;
     }
-    lines.push({ product_id: pid, description: name, hsn_code: p?.hsn_code ?? null, metres, rate_per_m: oi.rate_per_m, gst_percent: oi.gst_percent });
+    lines.push({ product_id: pid, description: name, hsn_code: p?.hsn_code ?? null, metres, kg_per_m: oi.kg_per_m, rate_per_kg: oi.rate_per_kg, gst_percent: oi.gst_percent });
   }
   return { lines, missing };
 }

@@ -16,7 +16,7 @@ export function invoiceHtml(a: { company: CompanySettings; party: Party | null; 
       const taxCells = inter
         ? `<td class="r">${i.gst_percent}%</td><td class="r">${formatInr(i.igst)}</td>`
         : `<td class="r">${i.gst_percent / 2}%</td><td class="r">${formatInr(i.cgst)}</td><td class="r">${i.gst_percent / 2}%</td><td class="r">${formatInr(i.sgst)}</td>`;
-      return `<tr><td>${n + 1}</td><td>${esc(i.description)}</td><td>${esc(i.hsn_code)}</td><td class="r">${formatNum(i.metres, 2)}</td><td class="r">${formatInr(i.rate_per_m)}</td><td class="r">${formatInr(i.taxable)}</td>${taxCells}</tr>`;
+      return `<tr><td>${n + 1}</td><td>${esc(i.description)}</td><td>${esc(i.hsn_code)}</td><td class="r">${formatNum(i.kg, 3)}</td><td class="r">${formatInr(i.rate_per_kg)}</td><td class="r">${formatInr(i.taxable)}</td>${taxCells}</tr>`;
     })
     .join('');
   const taxHead = inter ? '<th class="r">IGST %</th><th class="r">IGST</th>' : '<th class="r">CGST %</th><th class="r">CGST</th><th class="r">SGST %</th><th class="r">SGST</th>';
@@ -59,7 +59,7 @@ export function invoiceHtml(a: { company: CompanySettings; party: Party | null; 
   </div>
 
   <h2>Items</h2>
-  <table><thead><tr><th>#</th><th>Description</th><th>HSN</th><th class="r">Metres</th><th class="r">Rate / m</th><th class="r">Taxable</th>${taxHead}</tr></thead><tbody>${rows}</tbody></table>
+  <table><thead><tr><th>#</th><th>Description</th><th>HSN</th><th class="r">Qty (kg)</th><th class="r">Rate / kg</th><th class="r">Taxable</th>${taxHead}</tr></thead><tbody>${rows}</tbody></table>
   <table class="sum">
     <tr><td>Taxable value</td><td class="r">${formatInr(v.taxable_value)}</td></tr>
     ${inter ? `<tr><td>IGST</td><td class="r">${formatInr(v.igst)}</td></tr>` : `<tr><td>CGST</td><td class="r">${formatInr(v.cgst)}</td></tr><tr><td>SGST</td><td class="r">${formatInr(v.sgst)}</td></tr>`}

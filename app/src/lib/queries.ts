@@ -19,19 +19,19 @@ export const PARTY_TYPE_LABEL: Record<PartyType, string> = {
 export const productName = (p: Pick<Product, 'diameter_mm' | 'surface'>) => `${p.diameter_mm} mm ${SURFACE_LABEL[p.surface].toLowerCase()}`;
 
 // ───────── Products & rates ─────────
-export type ProductWithRate = Product & { rate_per_m: number | null; gst_percent: number | null };
+export type ProductWithRate = Product & { rate_per_kg: number | null; gst_percent: number | null };
 
 export function useProducts(withRates: boolean) {
   return useQuery({
     queryKey: ['products', withRates],
     queryFn: async (): Promise<ProductWithRate[]> => {
       const products = unwrap(await supabase.from('products').select('*').order('diameter_mm').order('surface'));
-      if (!withRates) return products.map((p) => ({ ...p, rate_per_m: null, gst_percent: null }));
+      if (!withRates) return products.map((p) => ({ ...p, rate_per_kg: null, gst_percent: null }));
       const rates = unwrap(await supabase.from('current_rates').select('*'));
       const byId = new Map(rates.map((r) => [r.product_id, r]));
       return products.map((p) => ({
         ...p,
-        rate_per_m: byId.get(p.id)?.rate_per_m ?? null,
+        rate_per_kg: byId.get(p.id)?.rate_per_kg ?? null,
         gst_percent: byId.get(p.id)?.gst_percent ?? null,
       }));
     },
@@ -41,7 +41,7 @@ export function useProducts(withRates: boolean) {
 export function useSaveProduct() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (p: { id?: string; diameter_mm: number; surface: RebarSurface; standard_length_m: number; hsn_code: string | null; active?: boolean; reorder_level_m?: number }) => {
+    mutationFn: async (p: { id?: string; diameter_mm: number; surface: RebarSurface; standard_length_m: number; hsn_code: string | null; kg_per_m?: number; active?: boolean; reorder_level_m?: number }) => {
       const { id, ...fields } = p;
       if (id) unwrap(await supabase.from('products').update(fields).eq('id', id).select().single());
       else unwrap(await supabase.from('products').insert(fields).select().single());
@@ -56,7 +56,7 @@ export function useAddStandardSizes() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (surface: RebarSurface) => {
-      const rows = STANDARD_DIAMETERS.map((d) => ({ diameter_mm: d, surface, standard_length_m: 12 }));
+      const rows = STANDARD_DIAMETERS.map((d) => ({ diameter_mm: d, surface, standard_length_m: 12, hsn_code: '70193900' }));
       unwrap(await supabase.from('products').upsert(rows, { onConflict: 'diameter_mm,surface', ignoreDuplicates: true }).select());
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['products'] }),
@@ -66,7 +66,7 @@ export function useAddStandardSizes() {
 export function useSetRate() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (r: { product_id: string; rate_per_m: number; gst_percent: number | null }) => {
+    mutationFn: async (r: { product_id: string; rate_per_kg: number; gst_percent: number | null }) => {
       unwrap(await supabase.from('rates').insert(r).select().single());
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['products'] }),

@@ -3,10 +3,10 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 
-import { formatDate, formatInr, formatNum, gfrpKgPerM, lineGst, lineTaxable, steelKgPerM, totals } from './calc';
+import { formatDate, formatInr, formatNum, lineGst, lineKg, lineTaxable, steelKgPerM, totals } from './calc';
 import type { CompanySettings, Party, Quote } from './database.types';
 
-export type PdfItem = { name: string; diameter_mm: number; metres: number; rate_per_m: number; gst_percent: number };
+export type PdfItem = { name: string; diameter_mm: number; metres: number; kg_per_m: number; rate_per_kg: number; gst_percent: number };
 
 const esc = (s: string | null | undefined) =>
   (s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -20,7 +20,7 @@ export function quoteHtml(args: { company: CompanySettings; party: Party | null;
     .map(
       (i, n) => `<tr>
         <td>${n + 1}</td><td>GFRP rebar, ${esc(i.name)}</td>
-        <td class="r">${formatNum(i.metres, 2)}</td><td class="r">${formatInr(i.rate_per_m)}</td>
+        <td class="r">${formatNum(i.metres, 2)}</td><td class="r">${formatNum(lineKg(i), 1)}</td><td class="r">${formatInr(i.rate_per_kg)}</td>
         <td class="r">${formatInr(lineTaxable(i))}</td><td class="r">${i.gst_percent}%</td><td class="r">${formatInr(lineTaxable(i) + lineGst(i))}</td></tr>`,
     )
     .join('');
@@ -28,7 +28,7 @@ export function quoteHtml(args: { company: CompanySettings; party: Party | null;
   const compare = items
     .map((i) => {
       const steelT = (i.metres * steelKgPerM(i.diameter_mm)) / 1000;
-      const gfrpT = (i.metres * gfrpKgPerM(i.diameter_mm)) / 1000;
+      const gfrpT = lineKg(i) / 1000;
       return `<tr><td>${i.diameter_mm} mm</td><td class="r">${formatNum(i.metres, 0)} m</td>
         <td class="r">${formatNum(steelT, 2)} t</td><td class="r">${formatNum(gfrpT, 2)} t</td>
         <td class="r">${formatNum(Math.round((1 - gfrpT / steelT) * 100))}% lighter</td></tr>`;
@@ -63,7 +63,7 @@ export function quoteHtml(args: { company: CompanySettings; party: Party | null;
   <div class="muted">${nl([p?.contact_person, p?.address, [p?.city, p?.state].filter(Boolean).join(', '), p?.gstin && `GSTIN ${p.gstin}`].filter(Boolean).join('\n'))}</div>
 
   <h2>Items</h2>
-  <table><thead><tr><th>#</th><th>Description</th><th class="r">Metres</th><th class="r">Rate / m</th><th class="r">Amount</th><th class="r">GST</th><th class="r">Total</th></tr></thead>
+  <table><thead><tr><th>#</th><th>Description</th><th class="r">Metres</th><th class="r">Weight (kg)</th><th class="r">Rate / kg</th><th class="r">Amount</th><th class="r">GST</th><th class="r">Total</th></tr></thead>
   <tbody>${rows}</tbody></table>
   <table class="sum">
     <tr><td>Taxable value</td><td class="r">${formatInr(t.taxable)}</td></tr>
@@ -74,7 +74,7 @@ export function quoteHtml(args: { company: CompanySettings; party: Party | null;
   <h2>GFRP and steel: weight for the same bar length</h2>
   <table><thead><tr><th>Diameter</th><th class="r">Length</th><th class="r">Steel (TMT)</th><th class="r">GFRP</th><th class="r">Difference</th></tr></thead>
   <tbody>${compare}</tbody></table>
-  <div class="note">Indicative comparison on a same-diameter basis. Steel at d²/162 kg per metre; GFRP at about ${formatNum(2100)} kg/m³. Actual weight is stated on the batch test certificate. The bar size and spacing for each structure must be designed by the structural engineer to the applicable FRP design codes.</div>
+  <div class="note">Indicative comparison on a same-diameter basis. Steel at d²/162 kg per metre; GFRP at the weight per metre of the product quoted. Billing is by weight: kg = metres × weight per metre. The bar size and spacing for each structure must be designed by the structural engineer to the applicable FRP design codes.</div>
 
   ${q.terms ? `<h2>Terms and conditions</h2><div class="box">${nl(q.terms)}</div>` : ''}
   ${c.bank_name || c.bank_account ? `<h2>Bank details</h2><div>${esc(c.bank_name)} · A/c ${esc(c.bank_account)} · IFSC ${esc(c.bank_ifsc)}</div>` : ''}

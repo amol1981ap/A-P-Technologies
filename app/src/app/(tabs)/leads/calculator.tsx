@@ -28,16 +28,18 @@ export default function CalculatorScreen() {
   const t = Number(tonnes);
   const valid = t > 0;
   const metres = valid ? (t * 1000) / steelKgPerM(dia) : 0;
-  const gfrpT = (metres * gfrpKgPerM(dia)) / 1000;
+  // Use the weight per metre of your product when it exists, else the typical estimate.
+  const product = (products.data ?? []).find((p) => p.diameter_mm === dia && p.active);
+  const gfrpT = (metres * (product?.kg_per_m ?? gfrpKgPerM(dia))) / 1000;
   const saved = t - gfrpT;
   const pct = valid ? Math.round((1 - gfrpT / t) * 100) : 0;
 
   // Owner only: the rate card is hidden from everyone else.
-  const card = isOwner ? (products.data ?? []).find((p) => p.diameter_mm === dia && p.active && p.rate_per_m != null) : undefined;
+  const card = isOwner ? (products.data ?? []).find((p) => p.diameter_mm === dia && p.active && p.rate_per_kg != null) : undefined;
   const sp = Number(steelPrice);
   const showCost = isOwner && card && valid && sp > 0;
   const steelCost = t * 1000 * sp;
-  const gfrpCost = metres * (card?.rate_per_m ?? 0);
+  const gfrpCost = gfrpT * 1000 * (card?.rate_per_kg ?? 0);
 
   function share() {
     setMsg('');
@@ -68,7 +70,7 @@ export default function CalculatorScreen() {
           <Label style={{ marginLeft: Spacing.one }}>Cost, for you only</Label>
           <Card style={{ gap: Spacing.three }}>
             <Field label="Steel price today (₹ per kg)" value={steelPrice} onChangeText={setSteelPrice} keyboard="decimal-pad" hint="Type the current market price. It is not saved." />
-            {card ? <Body muted size={13}>Your rate for {productName(card)}: {formatInr(card.rate_per_m!)} per metre.</Body> : <Body muted size={13}>Set a rate for {dia} mm in More › Products & rates to compare cost.</Body>}
+            {card ? <Body muted size={13}>Your rate for {productName(card)}: {formatInr(card.rate_per_kg!)} per kg.</Body> : <Body muted size={13}>Set a rate for {dia} mm in More › Products & rates to compare cost.</Body>}
             {showCost ? (
               <View style={{ gap: 8 }}>
                 <Row label="Steel cost" value={formatInr(steelCost).replace(/\.00$/, '')} />

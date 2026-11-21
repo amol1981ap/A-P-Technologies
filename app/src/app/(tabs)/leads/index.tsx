@@ -149,7 +149,7 @@ function QuoteList() {
 function QuoteCard({ item }: { item: QuoteListItem }) {
   const c = useTheme();
   const { quote: q, items } = item;
-  const priced = items.length > 0 && items.every((i) => i.rate_per_m != null && i.gst_percent != null);
+  const priced = items.length > 0 && items.every((i) => i.rate_per_kg != null && i.gst_percent != null);
   const f = followUpState(q);
   const metres = items.reduce((s, i) => s + i.metres, 0);
 

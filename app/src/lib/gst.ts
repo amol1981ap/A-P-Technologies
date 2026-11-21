@@ -1,23 +1,25 @@
 /** GST maths for tax invoices. All money is rounded to paise per line, then the invoice to the nearest rupee. */
-import { round2 } from './calc';
+import { lineKg, round2 } from './calc';
 
 export type InvoiceLineInput = {
   product_id: string | null;
   description: string;
   hsn_code: string | null;
   metres: number;
-  rate_per_m: number;
+  kg_per_m: number;
+  rate_per_kg: number;
   gst_percent: number;
 };
 
-export type InvoiceLine = InvoiceLineInput & { taxable: number; cgst: number; sgst: number; igst: number };
+export type InvoiceLine = InvoiceLineInput & { kg: number; taxable: number; cgst: number; sgst: number; igst: number };
 
 export function computeLine(l: InvoiceLineInput, interstate: boolean): InvoiceLine {
-  const taxable = round2(l.metres * l.rate_per_m);
-  if (interstate) return { ...l, taxable, cgst: 0, sgst: 0, igst: round2((taxable * l.gst_percent) / 100) };
+  const kg = lineKg(l);
+  const taxable = round2(kg * l.rate_per_kg);
+  if (interstate) return { ...l, kg, taxable, cgst: 0, sgst: 0, igst: round2((taxable * l.gst_percent) / 100) };
   // Inside the state the tax splits equally into CGST and SGST.
   const half = round2((taxable * l.gst_percent) / 200);
-  return { ...l, taxable, cgst: half, sgst: half, igst: 0 };
+  return { ...l, kg, taxable, cgst: half, sgst: half, igst: 0 };
 }
 
 export function computeInvoice(lines: InvoiceLineInput[], interstate: boolean) {

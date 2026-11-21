@@ -188,7 +188,7 @@ export function useUpdateQuote() {
 export function useAddItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (item: { quote_id: string; product_id: string; metres: number; rate_per_m?: number | null; gst_percent?: number | null }) =>
+    mutationFn: async (item: { quote_id: string; product_id: string; metres: number; rate_per_kg?: number | null; gst_percent?: number | null }) =>
       unwrap(await supabase.from('quote_items').insert(item).select().single()),
     onSuccess: () => invalidate(qc),
   });
@@ -197,7 +197,7 @@ export function useAddItem() {
 export function useUpdateItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...fields }: { id: string } & Partial<Pick<QuoteItem, 'metres' | 'rate_per_m' | 'gst_percent' | 'product_id'>>) =>
+    mutationFn: async ({ id, ...fields }: { id: string } & Partial<Pick<QuoteItem, 'metres' | 'rate_per_kg' | 'gst_percent' | 'product_id'>>) =>
       unwrap(await supabase.from('quote_items').update(fields).eq('id', id).select().single()),
     onSuccess: () => invalidate(qc),
   });

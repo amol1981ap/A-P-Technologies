@@ -53,6 +53,7 @@ export type Product = {
   surface: RebarSurface;
   standard_length_m: number;
   hsn_code: string | null;
+  kg_per_m: number;
   reorder_level_m: number;
   active: boolean;
   created_at: string;
@@ -62,7 +63,7 @@ export type Product = {
 export type Rate = {
   id: string;
   product_id: string;
-  rate_per_m: number;
+  rate_per_kg: number;
   gst_percent: number | null;
   effective_from: string;
   set_by: string | null;
@@ -71,7 +72,7 @@ export type Rate = {
 
 export type CurrentRate = {
   product_id: string | null;
-  rate_per_m: number | null;
+  rate_per_kg: number | null;
   gst_percent: number | null;
   effective_from: string | null;
 };
@@ -140,7 +141,8 @@ export type QuoteItem = {
   quote_id: string;
   product_id: string;
   metres: number;
-  rate_per_m: number | null;
+  rate_per_kg: number | null;
+  kg_per_m: number | null;
   gst_percent: number | null;
 };
 
@@ -164,7 +166,8 @@ export type OrderItem = {
   order_id: string;
   product_id: string;
   metres: number;
-  rate_per_m: number | null;
+  rate_per_kg: number | null;
+  kg_per_m: number | null;
   gst_percent: number | null;
 };
 
@@ -281,7 +284,9 @@ export type InvoiceItem = {
   description: string;
   hsn_code: string | null;
   metres: number;
-  rate_per_m: number;
+  kg_per_m: number;
+  kg: number;
+  rate_per_kg: number;
   gst_percent: number;
   taxable: number;
   cgst: number;
@@ -358,12 +363,12 @@ export type Database = {
       profiles: Table<Profile, Partial<Profile> & { id: string }>;
       company_settings: Table<CompanySettings, Partial<CompanySettings>>;
       products: Table<Product, Pick<Product, 'diameter_mm'> & Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>>;
-      rates: Table<Rate, Pick<Rate, 'product_id' | 'rate_per_m'> & Partial<Pick<Rate, 'gst_percent' | 'effective_from'>>>;
+      rates: Table<Rate, Pick<Rate, 'product_id' | 'rate_per_kg'> & Partial<Pick<Rate, 'gst_percent' | 'effective_from'>>>;
       leads: Table<Lead, Pick<Lead, 'contact_name'> & Partial<Omit<Lead, 'id' | 'contact_name' | 'created_at' | 'updated_at' | 'created_by'>>>;
       quotes: Table<Quote, Partial<Omit<Quote, 'id' | 'number' | 'created_at' | 'updated_at' | 'created_by'>>>;
-      quote_items: Table<QuoteItem, Pick<QuoteItem, 'quote_id' | 'product_id' | 'metres'> & Partial<Pick<QuoteItem, 'rate_per_m' | 'gst_percent'>>>;
+      quote_items: Table<QuoteItem, Pick<QuoteItem, 'quote_id' | 'product_id' | 'metres'> & Partial<Pick<QuoteItem, 'rate_per_kg' | 'kg_per_m' | 'gst_percent'>>>;
       orders: Table<Order, Pick<Order, 'party_id'> & Partial<Omit<Order, 'id' | 'number' | 'party_id' | 'created_at' | 'updated_at' | 'created_by'>>>;
-      order_items: Table<OrderItem, Pick<OrderItem, 'order_id' | 'product_id' | 'metres'> & Partial<Pick<OrderItem, 'rate_per_m' | 'gst_percent'>>>;
+      order_items: Table<OrderItem, Pick<OrderItem, 'order_id' | 'product_id' | 'metres'> & Partial<Pick<OrderItem, 'rate_per_kg' | 'kg_per_m' | 'gst_percent'>>>;
       despatches: Table<Despatch, Pick<Despatch, 'order_id'> & Partial<Omit<Despatch, 'id' | 'number' | 'order_id' | 'created_at' | 'updated_at'>>>;
       despatch_items: Table<DespatchItem, Pick<DespatchItem, 'despatch_id' | 'product_id' | 'metres'> & Partial<Pick<DespatchItem, 'batch_no'>>>;
       production_entries: Table<ProductionEntry, Pick<ProductionEntry, 'product_id' | 'good_m'> & Partial<Omit<ProductionEntry, 'id' | 'product_id' | 'good_m' | 'batch_no' | 'created_at' | 'updated_at' | 'created_by'>>>;

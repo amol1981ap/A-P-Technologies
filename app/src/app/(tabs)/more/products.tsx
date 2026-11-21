@@ -82,8 +82,9 @@ function ProductCard({ product: p, isOwner, open, onToggle }: { product: Product
   const c = useTheme();
   const setRate = useSetRate();
   const saveProduct = useSaveProduct();
-  const [rate, setRateText] = useState(p.rate_per_m != null ? String(p.rate_per_m) : '');
-  const [gst, setGst] = useState(p.gst_percent != null ? String(p.gst_percent) : '');
+  const [rate, setRateText] = useState(p.rate_per_kg != null ? String(p.rate_per_kg) : '');
+  const [gst, setGst] = useState(p.gst_percent != null ? String(p.gst_percent) : '18');
+  const [weight, setWeight] = useState(String(p.kg_per_m));
   const [hsn, setHsn] = useState(p.hsn_code ?? '');
   const [reorder, setReorder] = useState(p.reorder_level_m ? String(p.reorder_level_m) : '');
   const [msg, setMsg] = useState('');
@@ -92,15 +93,17 @@ function ProductCard({ product: p, isOwner, open, onToggle }: { product: Product
     setMsg('');
     const r = Number(rate);
     const g = gst.trim() === '' ? null : Number(gst);
-    if (!(r >= 0) || rate.trim() === '') return setMsg('Enter a rate per metre.');
+    if (!(r >= 0) || rate.trim() === '') return setMsg('Enter a rate per kg.');
+    const w = Number(weight);
+    if (!(w > 0)) return setMsg('Enter the weight per metre in kg.');
     if (g != null && !(g >= 0 && g <= 28)) return setMsg('GST must be between 0 and 28.');
     try {
       const ro = reorder.trim() === '' ? 0 : Number(reorder);
       if (!(ro >= 0)) return setMsg('Reorder level must be zero or more.');
-      if ((p.hsn_code ?? '') !== hsn.trim() || ro !== p.reorder_level_m) {
-        await saveProduct.mutateAsync({ id: p.id, diameter_mm: p.diameter_mm, surface: p.surface, standard_length_m: p.standard_length_m, hsn_code: blankToNull(hsn), reorder_level_m: ro });
+      if ((p.hsn_code ?? '') !== hsn.trim() || ro !== p.reorder_level_m || w !== p.kg_per_m) {
+        await saveProduct.mutateAsync({ id: p.id, diameter_mm: p.diameter_mm, surface: p.surface, standard_length_m: p.standard_length_m, hsn_code: blankToNull(hsn), kg_per_m: w, reorder_level_m: ro });
       }
-      if (r !== p.rate_per_m || g !== p.gst_percent) await setRate.mutateAsync({ product_id: p.id, rate_per_m: r, gst_percent: g });
+      if (r !== p.rate_per_kg || g !== p.gst_percent) await setRate.mutateAsync({ product_id: p.id, rate_per_kg: r, gst_percent: g });
       onToggle();
     } catch (e) {
       setMsg((e as Error).message);
@@ -117,12 +120,12 @@ function ProductCard({ product: p, isOwner, open, onToggle }: { product: Product
         <View style={{ flex: 1, gap: 2 }}>
           <Body weight="semibold" size={16}>{productName(p)}</Body>
           <Body muted size={13}>
-            {p.standard_length_m} m bars{p.hsn_code ? ` · HSN ${p.hsn_code}` : ''}{p.active ? '' : ' · not sold'}
+            {p.standard_length_m} m bars · {p.kg_per_m} kg/m{p.hsn_code ? ` · HSN ${p.hsn_code}` : ''}{p.active ? '' : ' · not sold'}
           </Body>
         </View>
         {isOwner ? (
-          p.rate_per_m != null ? (
-            <Body weight="semibold">₹{p.rate_per_m}/m</Body>
+          p.rate_per_kg != null ? (
+            <Body weight="semibold">₹{p.rate_per_kg}/kg</Body>
           ) : (
             <Chip tone="attention">Set rate</Chip>
           )
@@ -133,12 +136,13 @@ function ProductCard({ product: p, isOwner, open, onToggle }: { product: Product
         <View style={{ gap: Spacing.three, borderTopWidth: 1, borderTopColor: c.line, paddingTop: Spacing.three }}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
-              <Field label="Rate (₹ per metre)" value={rate} onChangeText={setRateText} keyboard="decimal-pad" />
+              <Field label="Rate (₹ per kg)" value={rate} onChangeText={setRateText} keyboard="decimal-pad" hint="Before GST" />
             </View>
             <View style={{ flex: 1 }}>
-              <Field label="GST %" value={gst} onChangeText={setGst} keyboard="decimal-pad" hint="Confirm with your CA" />
+              <Field label="GST %" value={gst} onChangeText={setGst} keyboard="decimal-pad" hint="18% additional" />
             </View>
           </View>
+          <Field label="Weight per metre (kg)" value={weight} onChangeText={setWeight} keyboard="decimal-pad" hint="Typical estimate. Weigh a bar and correct it. Quotes, orders and invoices use this." />
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
               <Field label="HSN code" value={hsn} onChangeText={setHsn} keyboard="numeric" />
@@ -151,7 +155,7 @@ function ProductCard({ product: p, isOwner, open, onToggle }: { product: Product
             label="Currently sold"
             value={p.active}
             onChange={(v) =>
-              saveProduct.mutate({ id: p.id, diameter_mm: p.diameter_mm, surface: p.surface, standard_length_m: p.standard_length_m, hsn_code: p.hsn_code, active: v })
+              saveProduct.mutate({ id: p.id, diameter_mm: p.diameter_mm, surface: p.surface, standard_length_m: p.standard_length_m, hsn_code: p.hsn_code, kg_per_m: p.kg_per_m, active: v })
             }
           />
           <ErrorText>{msg}</ErrorText>
@@ -167,7 +171,7 @@ function NewProduct({ onDone }: { onDone: () => void }) {
   const [diameter, setDiameter] = useState('');
   const [surface, setSurface] = useState<RebarSurface>('sand_coated');
   const [length, setLength] = useState('12');
-  const [hsn, setHsn] = useState('');
+  const [hsn, setHsn] = useState('70193900');
   const [msg, setMsg] = useState('');
 
   async function submit() {

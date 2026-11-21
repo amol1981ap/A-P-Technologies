@@ -6,7 +6,7 @@ import { Body, Button, Card, Chip, ChipPicker, ErrorText, Field, Label, Loading,
 import { FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/lib/auth';
-import { addDaysIso, formatDate, formatInr, formatNum, isPriced, totals, waNumber } from '@/lib/calc';
+import { addDaysIso, formatDate, formatInr, formatNum, isPriced, lineKg, lineTaxable, totals, waNumber } from '@/lib/calc';
 import type { CompanySettings, QuoteItem } from '@/lib/database.types';
 import { FOLLOWUP_DAYS, followUpMessage, followUpState } from '@/lib/followups';
 import { useCreateOrderFromQuote, useOrders } from '@/lib/ops-queries';
@@ -33,7 +33,7 @@ export default function QuoteScreen() {
   if (quote.error) return <ErrorText>{quote.error.message}</ErrorText>;
   if (!quote.data || !products.data || !company.data) return <Loading />;
 
-  const sig = quote.data.items.map((i) => `${i.id}:${i.metres}:${i.rate_per_m}:${i.gst_percent}`).join('|');
+  const sig = quote.data.items.map((i) => `${i.id}:${i.metres}:${i.rate_per_kg}:${i.gst_percent}`).join('|');
   return (
     <QuoteView
       key={`${quote.data.quote.id}-${quote.data.quote.updated_at}-${sig}`}
@@ -68,7 +68,7 @@ function QuoteView({ bundle, products, company }: { bundle: QuoteListItem; produ
           i.id,
           {
             metres: String(i.metres),
-            rate: String(i.rate_per_m ?? (isOwner ? card?.rate_per_m ?? '' : '')),
+            rate: String(i.rate_per_kg ?? (isOwner ? card?.rate_per_kg ?? '' : '')),
             gst: String(i.gst_percent ?? (isOwner ? card?.gst_percent ?? '' : '')),
           },
         ];
@@ -89,13 +89,13 @@ function QuoteView({ bundle, products, company }: { bundle: QuoteListItem; produ
     (terms.trim() || null) !== (q.terms?.trim() || null) ||
     items.some((i) => {
       const e = edited(i);
-      return Number(e.metres) !== i.metres || (isOwner && (parse(e.rate) !== i.rate_per_m || parse(e.gst) !== i.gst_percent));
+      return Number(e.metres) !== i.metres || (isOwner && (parse(e.rate) !== i.rate_per_kg || parse(e.gst) !== i.gst_percent));
     });
 
   // What the quote looks like with the edits applied.
   const lines = items.map((i) => {
     const e = edited(i);
-    return { ...i, metres: Number(e.metres) || 0, rate_per_m: isOwner ? parse(e.rate) : i.rate_per_m, gst_percent: isOwner ? parse(e.gst) : i.gst_percent };
+    return { ...i, metres: Number(e.metres) || 0, rate_per_kg: isOwner ? parse(e.rate) : i.rate_per_kg, gst_percent: isOwner ? parse(e.gst) : i.gst_percent };
   });
   const ready = lines.length > 0 && lines.every((l) => l.metres > 0 && isPriced(l));
   const t = totals(ready ? lines : []);
@@ -117,15 +117,15 @@ function QuoteView({ bundle, products, company }: { bundle: QuoteListItem; produ
       for (const l of lines) {
         if (!(l.metres > 0)) throw new Error('Metres must be more than zero.');
         if (isOwner) {
-          if (l.rate_per_m != null && !(l.rate_per_m >= 0)) throw new Error('Enter a valid rate.');
+          if (l.rate_per_kg != null && !(l.rate_per_kg >= 0)) throw new Error('Enter a valid rate.');
           if (l.gst_percent != null && !(l.gst_percent >= 0 && l.gst_percent <= 28)) throw new Error('GST must be between 0 and 28.');
         }
       }
       for (const l of lines) {
         const orig = items.find((i) => i.id === l.id)!;
-        const patch: Partial<Pick<QuoteItem, 'metres' | 'rate_per_m' | 'gst_percent'>> = {};
+        const patch: Partial<Pick<QuoteItem, 'metres' | 'rate_per_kg' | 'gst_percent'>> = {};
         if (l.metres !== orig.metres) patch.metres = l.metres;
-        if (isOwner && l.rate_per_m !== orig.rate_per_m) patch.rate_per_m = l.rate_per_m;
+        if (isOwner && l.rate_per_kg !== orig.rate_per_kg) patch.rate_per_kg = l.rate_per_kg;
         if (isOwner && l.gst_percent !== orig.gst_percent) patch.gst_percent = l.gst_percent;
         if (Object.keys(patch).length) await updateItem.mutateAsync({ id: l.id, ...patch });
       }
@@ -142,7 +142,7 @@ function QuoteView({ bundle, products, company }: { bundle: QuoteListItem; produ
         quote_id: q.id,
         product_id: newProduct,
         metres: m,
-        ...(isOwner && card?.rate_per_m != null ? { rate_per_m: card.rate_per_m, gst_percent: card.gst_percent } : {}),
+        ...(isOwner && card?.rate_per_kg != null ? { rate_per_kg: card.rate_per_kg, gst_percent: card.gst_percent } : {}),
       });
       setNewProduct(null);
       setNewMetres('');
@@ -155,7 +155,7 @@ function QuoteView({ bundle, products, company }: { bundle: QuoteListItem; produ
       quote: q,
       items: lines.map((l) => {
         const p = byId.get(l.product_id)!;
-        return { name: productName(p), diameter_mm: p.diameter_mm, metres: l.metres, rate_per_m: l.rate_per_m!, gst_percent: l.gst_percent! };
+        return { name: productName(p), diameter_mm: p.diameter_mm, metres: l.metres, kg_per_m: l.kg_per_m!, rate_per_kg: l.rate_per_kg!, gst_percent: l.gst_percent! };
       }),
     });
   }
@@ -234,7 +234,8 @@ function QuoteView({ bundle, products, company }: { bundle: QuoteListItem; produ
           const p = byId.get(i.product_id);
           const e = edited(i);
           const line = lines.find((l) => l.id === i.id)!;
-          const amount = line.rate_per_m != null ? line.metres * line.rate_per_m : null;
+          const kg = lineKg(line);
+          const amount = line.rate_per_kg != null ? lineTaxable(line) : null;
           return (
             <Card key={i.id} style={{ gap: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -248,12 +249,12 @@ function QuoteView({ bundle, products, company }: { bundle: QuoteListItem; produ
               {draft ? (
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <View style={{ flex: 1 }}>
-                    <Field label="Metres" value={e.metres} onChangeText={(v) => setEdits((s) => ({ ...s, [i.id]: { ...edited(i), metres: v } }))} keyboard="decimal-pad" />
+                    <Field label="Metres" value={e.metres} onChangeText={(v) => setEdits((s) => ({ ...s, [i.id]: { ...edited(i), metres: v } }))} keyboard="decimal-pad" hint={`${formatNum(kg, 1)} kg`} />
                   </View>
                   {isOwner ? (
                     <>
                       <View style={{ flex: 1 }}>
-                        <Field label="Rate ₹/m" value={e.rate} onChangeText={(v) => setEdits((s) => ({ ...s, [i.id]: { ...edited(i), rate: v } }))} keyboard="decimal-pad" />
+                        <Field label="Rate ₹/kg" value={e.rate} onChangeText={(v) => setEdits((s) => ({ ...s, [i.id]: { ...edited(i), rate: v } }))} keyboard="decimal-pad" />
                       </View>
                       <View style={{ width: 84 }}>
                         <Field label="GST %" value={e.gst} onChangeText={(v) => setEdits((s) => ({ ...s, [i.id]: { ...edited(i), gst: v } }))} keyboard="decimal-pad" />
@@ -262,11 +263,11 @@ function QuoteView({ bundle, products, company }: { bundle: QuoteListItem; produ
                   ) : null}
                 </View>
               ) : (
-                <Body muted>{formatNum(i.metres, 2)} m{i.rate_per_m != null ? ` × ${formatInr(i.rate_per_m)}` : ''}</Body>
+                <Body muted>{formatNum(i.metres, 2)} m · {formatNum(kg, 1)} kg{i.rate_per_kg != null ? ` × ${formatInr(i.rate_per_kg)}/kg` : ''}</Body>
               )}
               {!isOwner && draft ? (
-                i.rate_per_m != null ? (
-                  <Body muted size={13}>Rate {formatInr(i.rate_per_m)}/m · GST {i.gst_percent}%</Body>
+                i.rate_per_kg != null ? (
+                  <Body muted size={13}>{formatNum(kg, 1)} kg · Rate {formatInr(i.rate_per_kg)}/kg · GST {i.gst_percent}%</Body>
                 ) : (
                   <Chip tone="attention">Waiting for owner’s rate</Chip>
                 )

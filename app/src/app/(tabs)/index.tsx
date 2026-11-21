@@ -322,7 +322,7 @@ function SetupCard() {
   const c = company.data;
   const steps = [
     { done: !!(c.phone && c.bank_account && c.quote_terms), title: 'Company details', detail: 'Phone, bank account and quote terms appear on every quote and invoice', go: '/more/company' },
-    { done: products.data.some((p) => p.rate_per_m != null && p.hsn_code), title: 'Products and rates', detail: 'Add your diameters, set a rate and the HSN code for each', go: '/more/products' },
+    { done: products.data.some((p) => p.rate_per_kg != null && p.hsn_code), title: 'Products and rates', detail: 'Add your diameters, set a rate and the HSN code for each', go: '/more/products' },
     { done: team.data.some((t) => t.role !== 'owner' && t.active), title: 'Your team', detail: 'Add sales, despatch and factory people with their mobile numbers', go: '/more/team' },
   ];
   if (steps.every((x) => x.done)) return null;
