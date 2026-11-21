@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { AppRole, CompanySettings, Party, PartyType, Product, RebarSurface } from './database.types';
+import type { AppRole, CompanySettings, Party, PartyType, Product, RebarShape, RebarSurface } from './database.types';
 import { callFunction, supabase } from './supabase';
 
 function unwrap<R extends { data: unknown; error: { message: string } | null }>(res: R): NonNullable<R['data']> {
@@ -16,7 +16,9 @@ export const PARTY_TYPE_LABEL: Record<PartyType, string> = {
   supplier: 'Suppliers',
   transporter: 'Transporters',
 };
-export const productName = (p: Pick<Product, 'diameter_mm' | 'surface'>) => `${p.diameter_mm} mm ${SURFACE_LABEL[p.surface].toLowerCase()}`;
+export const SHAPE_LABEL: Record<RebarShape, string> = { straight: 'Straight', bent_up: 'Bent-up' };
+export const productName = (p: Pick<Product, 'diameter_mm' | 'surface'> & { shape?: RebarShape }) =>
+  `${p.diameter_mm} mm ${SURFACE_LABEL[p.surface].toLowerCase()}${p.shape === 'bent_up' ? ', bent-up' : ''}`;
 
 // ───────── Products & rates ─────────
 export type ProductWithRate = Product & { rate_per_kg: number | null; gst_percent: number | null };
@@ -25,7 +27,7 @@ export function useProducts(withRates: boolean) {
   return useQuery({
     queryKey: ['products', withRates],
     queryFn: async (): Promise<ProductWithRate[]> => {
-      const products = unwrap(await supabase.from('products').select('*').order('diameter_mm').order('surface'));
+      const products = unwrap(await supabase.from('products').select('*').order('diameter_mm').order('surface').order('shape'));
       if (!withRates) return products.map((p) => ({ ...p, rate_per_kg: null, gst_percent: null }));
       const rates = unwrap(await supabase.from('current_rates').select('*'));
       const byId = new Map(rates.map((r) => [r.product_id, r]));
@@ -41,7 +43,7 @@ export function useProducts(withRates: boolean) {
 export function useSaveProduct() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (p: { id?: string; diameter_mm: number; surface: RebarSurface; standard_length_m: number; hsn_code: string | null; kg_per_m?: number; active?: boolean; reorder_level_m?: number }) => {
+    mutationFn: async (p: { id?: string; diameter_mm: number; surface: RebarSurface; shape?: RebarShape; standard_length_m: number; hsn_code: string | null; kg_per_m?: number; active?: boolean; reorder_level_m?: number }) => {
       const { id, ...fields } = p;
       if (id) unwrap(await supabase.from('products').update(fields).eq('id', id).select().single());
       else unwrap(await supabase.from('products').insert(fields).select().single());
@@ -50,14 +52,20 @@ export function useSaveProduct() {
   });
 }
 
-/** Adds the usual GFRP diameters for one surface in one go. Skips any that already exist. */
+/** Starting rates per kg, before GST. The owner can change each one. */
+export const START_RATE = { straight: 150, bent_up: 180 } as const;
+
+/** Adds the usual GFRP diameters for one surface and shape in one go, with starting rates. Skips any that already exist. */
 export const STANDARD_DIAMETERS = [8, 10, 12, 16, 18, 20, 22, 24];
 export function useAddStandardSizes() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (surface: RebarSurface) => {
-      const rows = STANDARD_DIAMETERS.map((d) => ({ diameter_mm: d, surface, standard_length_m: 12, hsn_code: '70193900' }));
-      unwrap(await supabase.from('products').upsert(rows, { onConflict: 'diameter_mm,surface', ignoreDuplicates: true }).select());
+    mutationFn: async ({ surface, shape }: { surface: RebarSurface; shape: RebarShape }) => {
+      const rows = STANDARD_DIAMETERS.map((d) => ({ diameter_mm: d, surface, shape, standard_length_m: 12, hsn_code: '70193900' }));
+      const added = unwrap(await supabase.from('products').upsert(rows, { onConflict: 'diameter_mm,surface,shape', ignoreDuplicates: true }).select());
+      if (added.length) {
+        unwrap(await supabase.from('rates').insert(added.map((p) => ({ product_id: p.id, rate_per_kg: START_RATE[shape], gst_percent: 18 }))).select());
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['products'] }),
   });

@@ -33,3 +33,8 @@
 - Each quote, order and invoice line stores the weight at the time, so changing a product's weight never changes an old document. Sales cannot override it.
 - Quotation and invoice PDFs show weight, ₹/kg, amount and GST; the GFRP-vs-steel table uses the product's weight.
 - Billing uses nominal weight, not a weighed figure. If bars are weighed at despatch, an "actual weight" entry can be added.
+
+## Weights and bent-up bars
+- Weight per metre: owner's table is the plain (ribbed) bar: 8 mm 0.105, 10 mm 0.158, 12 mm 0.23, 16 mm 0.41, 18 mm 0.506, 20 mm 0.625, 22 mm 0.756, 24 mm 0.900 kg/m. Sand-coated adds 0.010 kg/m (12 mm sand-coated = 0.24).
+- Bent-up bars are separate products (shape: straight / bent-up), starting at ₹180/kg versus ₹150/kg straight, GST 18%. Weight per metre is the same as the straight bar of that surface. Batch numbers end in B (261121-12SB).
+- Quick start adds a size set in one tap with those starting rates; the owner can change any rate or weight.

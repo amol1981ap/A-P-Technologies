@@ -9,6 +9,7 @@ type Table<Row, Insert, Update = Partial<Insert>> = { Row: Row; Insert: Insert; 
 export type AppRole = 'owner' | 'sales' | 'despatch' | 'factory';
 export type PartyType = 'customer' | 'consultant' | 'supplier' | 'transporter';
 export type RebarSurface = 'sand_coated' | 'ribbed';
+export type RebarShape = 'straight' | 'bent_up';
 export type LeadSource = 'instagram' | 'facebook' | 'whatsapp' | 'website' | 'indiamart' | 'referral' | 'phone' | 'walk_in' | 'other';
 export type LeadScore = 'hot' | 'warm' | 'cold';
 export type LeadStatus = 'new' | 'contacted' | 'quoted' | 'won' | 'lost';
@@ -51,6 +52,7 @@ export type Product = {
   id: string;
   diameter_mm: number;
   surface: RebarSurface;
+  shape: RebarShape;
   standard_length_m: number;
   hsn_code: string | null;
   kg_per_m: number;

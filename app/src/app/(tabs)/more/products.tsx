@@ -5,8 +5,13 @@ import { Body, Button, Card, Chip, Empty, ErrorText, Field, Loading, Notice, Scr
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/lib/auth';
-import type { RebarSurface } from '@/lib/database.types';
+import type { RebarShape, RebarSurface } from '@/lib/database.types';
 import { blankToNull, productName, STANDARD_DIAMETERS, useAddStandardSizes, useProducts, useSaveProduct, useSetRate, type ProductWithRate } from '@/lib/queries';
+
+const SHAPES: { value: RebarShape; label: string }[] = [
+  { value: 'straight', label: 'Straight' },
+  { value: 'bent_up', label: 'Bent-up' },
+];
 
 const SURFACES: { value: RebarSurface; label: string }[] = [
   { value: 'sand_coated', label: 'Sand-coated' },
@@ -20,6 +25,7 @@ export default function ProductsScreen() {
   const [openId, setOpenId] = useState<string | null>(null);
   const addStandard = useAddStandardSizes();
   const [bulkMsg, setBulkMsg] = useState('');
+  const [quick, setQuick] = useState(false);
 
   return (
     <Screen nested>
@@ -34,26 +40,29 @@ export default function ProductsScreen() {
         <Empty title="No products yet" detail={isOwner ? 'Add each diameter and surface you sell.' : 'The owner has not added products yet.'} />
       ) : null}
 
-      {isOwner && data && data.length < 4 && !adding ? (
+      {isOwner && data && (data.length < 4 || quick) && !adding ? (
         <Card style={{ gap: Spacing.three }}>
           <Body weight="semibold">Quick start</Body>
-          <Body muted size={13}>Add the usual diameters ({STANDARD_DIAMETERS.join(', ')} mm) in one tap, then set a rate on each. Switch off any you do not sell.</Body>
+          <Body muted size={13}>Add the usual diameters ({STANDARD_DIAMETERS.join(', ')} mm) in one tap. Starting rates are ₹150/kg straight and ₹180/kg bent-up, GST 18%. Change any rate afterwards, and switch off sizes you do not sell.</Body>
           <ErrorText>{bulkMsg}</ErrorText>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            {SURFACES.map((s) => (
-              <View key={s.value} style={{ flex: 1 }}>
-                <Button
-                  label={`Add ${s.label.toLowerCase()}`}
-                  variant="secondary"
-                  busy={addStandard.isPending}
-                  onPress={() => {
-                    setBulkMsg('');
-                    addStandard.mutate(s.value, { onError: (e) => setBulkMsg(e.message) });
-                  }}
-                />
-              </View>
-            ))}
-          </View>
+          {SHAPES.map((sh) => (
+            <View key={sh.value} style={{ flexDirection: 'row', gap: 10 }}>
+              {SURFACES.map((s) => (
+                <View key={s.value} style={{ flex: 1 }}>
+                  <Button
+                    label={`${sh.label}, ${s.label.toLowerCase()}`}
+                    variant="secondary"
+                    busy={addStandard.isPending}
+                    onPress={() => {
+                      setBulkMsg('');
+                      setQuick(true);
+                      addStandard.mutate({ surface: s.value, shape: sh.value }, { onError: (e) => setBulkMsg(e.message) });
+                    }}
+                  />
+                </View>
+              ))}
+            </View>
+          ))}
         </Card>
       ) : null}
 
@@ -71,7 +80,10 @@ export default function ProductsScreen() {
         adding ? (
           <NewProduct onDone={() => setAdding(false)} />
         ) : (
-          <Button label="Add product" variant="secondary" onPress={() => setAdding(true)} />
+          <>
+            <Button label="Add product" variant="secondary" onPress={() => setAdding(true)} />
+            {(data?.length ?? 0) >= 4 || quick ? <Button label={quick ? 'Done adding sizes' : 'Add standard sizes'} variant="secondary" onPress={() => setQuick((v) => !v)} /> : null}
+          </>
         )
       ) : null}
     </Screen>
@@ -101,7 +113,7 @@ function ProductCard({ product: p, isOwner, open, onToggle }: { product: Product
       const ro = reorder.trim() === '' ? 0 : Number(reorder);
       if (!(ro >= 0)) return setMsg('Reorder level must be zero or more.');
       if ((p.hsn_code ?? '') !== hsn.trim() || ro !== p.reorder_level_m || w !== p.kg_per_m) {
-        await saveProduct.mutateAsync({ id: p.id, diameter_mm: p.diameter_mm, surface: p.surface, standard_length_m: p.standard_length_m, hsn_code: blankToNull(hsn), kg_per_m: w, reorder_level_m: ro });
+        await saveProduct.mutateAsync({ id: p.id, diameter_mm: p.diameter_mm, surface: p.surface, shape: p.shape, standard_length_m: p.standard_length_m, hsn_code: blankToNull(hsn), kg_per_m: w, reorder_level_m: ro });
       }
       if (r !== p.rate_per_kg || g !== p.gst_percent) await setRate.mutateAsync({ product_id: p.id, rate_per_kg: r, gst_percent: g });
       onToggle();
@@ -155,7 +167,7 @@ function ProductCard({ product: p, isOwner, open, onToggle }: { product: Product
             label="Currently sold"
             value={p.active}
             onChange={(v) =>
-              saveProduct.mutate({ id: p.id, diameter_mm: p.diameter_mm, surface: p.surface, standard_length_m: p.standard_length_m, hsn_code: p.hsn_code, kg_per_m: p.kg_per_m, active: v })
+              saveProduct.mutate({ id: p.id, diameter_mm: p.diameter_mm, surface: p.surface, shape: p.shape, standard_length_m: p.standard_length_m, hsn_code: p.hsn_code, kg_per_m: p.kg_per_m, active: v })
             }
           />
           <ErrorText>{msg}</ErrorText>
@@ -170,6 +182,7 @@ function NewProduct({ onDone }: { onDone: () => void }) {
   const save = useSaveProduct();
   const [diameter, setDiameter] = useState('');
   const [surface, setSurface] = useState<RebarSurface>('sand_coated');
+  const [shape, setShape] = useState<RebarShape>('straight');
   const [length, setLength] = useState('12');
   const [hsn, setHsn] = useState('70193900');
   const [msg, setMsg] = useState('');
@@ -181,11 +194,11 @@ function NewProduct({ onDone }: { onDone: () => void }) {
     if (!Number.isInteger(d) || d < 4 || d > 40) return setMsg('Diameter must be a whole number from 4 to 40 mm.');
     if (!(l > 0)) return setMsg('Enter the standard bar length in metres.');
     try {
-      await save.mutateAsync({ diameter_mm: d, surface, standard_length_m: l, hsn_code: blankToNull(hsn) });
+      await save.mutateAsync({ diameter_mm: d, surface, shape, standard_length_m: l, hsn_code: blankToNull(hsn) });
       onDone();
     } catch (e) {
       const m = (e as Error).message;
-      setMsg(/duplicate|unique/i.test(m) ? 'This diameter and surface already exists.' : m);
+      setMsg(/duplicate|unique/i.test(m) ? 'This diameter, surface and shape already exists.' : m);
     }
   }
 
@@ -201,6 +214,7 @@ function NewProduct({ onDone }: { onDone: () => void }) {
         </View>
       </View>
       <Segmented label="Surface" options={SURFACES} value={surface} onChange={setSurface} />
+      <Segmented label="Shape" options={SHAPES} value={shape} onChange={setShape} />
       <Field label="HSN code (optional)" value={hsn} onChangeText={setHsn} keyboard="numeric" />
       <ErrorText>{msg}</ErrorText>
       <Button label="Add product" onPress={submit} busy={save.isPending} />

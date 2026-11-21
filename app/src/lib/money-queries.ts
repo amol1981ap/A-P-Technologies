@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { addDaysIso } from './calc';
 import type { Despatch, DespatchItem, Invoice, InvoiceItem, Order, OrderItem, Party, Payment, PaymentMode, Product } from './database.types';
 import { computeInvoice, type InvoiceLineInput } from './gst';
+import { productName } from './queries';
 import { supabase } from './supabase';
 
 function unwrap<R extends { data: unknown; error: { message: string } | null }>(res: R): NonNullable<R['data']> {
@@ -140,7 +141,7 @@ export function linesFromDespatch(u: Uninvoiced): { lines: InvoiceLineInput[]; m
   for (const [pid, metres] of byProduct) {
     const p = u.products.find((x) => x.id === pid);
     const oi = u.orderItems.find((x) => x.product_id === pid);
-    const name = p ? `GFRP rebar, ${p.diameter_mm} mm ${p.surface === 'sand_coated' ? 'sand-coated' : 'ribbed'}` : 'GFRP rebar';
+    const name = p ? `GFRP rebar, ${productName(p)}` : 'GFRP rebar';
     if (!oi || oi.rate_per_kg == null || oi.kg_per_m == null || oi.gst_percent == null) {
       missing.push(`${name}: no rate on the order`);
       continue;
