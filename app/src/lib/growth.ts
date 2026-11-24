@@ -87,3 +87,46 @@ export function insight(stats: Stat[]): string {
   if (total < 10) return `${name(top.key)} brings the most leads so far (${top.leads}). Too few leads to compare sources fairly. Check again at 10 or more.`;
   return `${name(top.key)} brings the most leads (${top.leads}), but no source has turned three or more leads into an order yet.`;
 }
+
+// ───────── Funnel: enquiry → contacted → quoted → ordered ─────────
+export type FunnelStage = { key: 'leads' | 'contacted' | 'quoted' | 'ordered'; label: string; count: number; ofStart: number; ofPrev: number | null };
+
+export function funnel(rows: LeadPerformance[], start: Date | null, source: LeadSource | null) {
+  const inScope = rows.filter((r) => inPeriod(r.created_at, start) && (!source || r.source === source));
+  const counts = {
+    leads: inScope.length,
+    // Anything past "new" has been picked up, and a quote or order means it was contacted.
+    contacted: inScope.filter((r) => r.status !== 'new' || r.quoted || r.ordered).length,
+    quoted: inScope.filter((r) => r.quoted || r.ordered).length,
+    ordered: inScope.filter((r) => r.ordered).length,
+  };
+  const labels = { leads: 'Enquiries', contacted: 'Contacted', quoted: 'Quoted', ordered: 'Ordered' } as const;
+  const keys = ['leads', 'contacted', 'quoted', 'ordered'] as const;
+  const stages: FunnelStage[] = keys.map((k, i) => ({
+    key: k,
+    label: labels[k],
+    count: counts[k],
+    ofStart: counts.leads > 0 ? Math.round((counts[k] / counts.leads) * 100) : 0,
+    ofPrev: i === 0 ? null : counts[keys[i - 1]] > 0 ? Math.round((counts[k] / counts[keys[i - 1]]) * 100) : null,
+  }));
+  const value = inScope.reduce((t, r) => t + Number(r.order_value ?? 0), 0);
+  return { stages, lost: inScope.filter((r) => r.status === 'lost').length, value, total: counts.leads };
+}
+
+/** The step where the most leads fall away, in plain words. Needs enough leads to mean something. */
+export function funnelInsight(stages: FunnelStage[]): string {
+  const total = stages[0].count;
+  if (total === 0) return 'No enquiries in this period yet.';
+  if (total < 5) return 'Too few enquiries to judge where they drop off. Check again at 5 or more.';
+  let worst = { from: '', to: '', lost: 0 };
+  for (let i = 1; i < stages.length; i++) {
+    const lost = stages[i - 1].count - stages[i].count;
+    if (lost > worst.lost) worst = { from: stages[i - 1].label, to: stages[i].label, lost };
+  }
+  if (worst.lost === 0) return 'Every enquiry has moved through to an order.';
+  const hint =
+    worst.to === 'Contacted' ? 'Call new enquiries sooner.' :
+    worst.to === 'Quoted' ? 'Send quotes faster after the first call.' :
+    'Follow up on sent quotes on day 3, 7 and 12.';
+  return `Most enquiries are lost between ${worst.from} and ${worst.to}: ${worst.lost} of ${total}. ${hint}`;
+}

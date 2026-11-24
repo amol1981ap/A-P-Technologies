@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { FunnelView } from '@/components/funnel-view';
 import { GrowthView } from '@/components/growth-view';
 import { Body, Card, Chip, Empty, ErrorText, Header, Loading, Screen, Segmented, type Tone } from '@/components/ui';
 import { FontFamily, Radius } from '@/constants/theme';
@@ -11,7 +12,7 @@ import type { Lead, LeadScore } from '@/lib/database.types';
 import { followUpState } from '@/lib/followups';
 import { LEAD_SOURCE_LABEL, QUOTE_STATUS_LABEL, useLeads, useQuotes, type QuoteListItem } from '@/lib/sales-queries';
 
-type View_ = 'leads' | 'quotes' | 'growth';
+type View_ = 'leads' | 'quotes' | 'growth' | 'funnel';
 type Filter = 'open' | LeadScore | 'closed';
 
 const SCORE_TONE: Record<LeadScore, Tone> = { hot: 'attention', warm: 'calm', cold: 'neutral' };
@@ -24,7 +25,7 @@ export default function LeadsHome() {
     <Screen>
       <Header
         eyebrow="Sales"
-        title={view === 'leads' ? 'Leads' : view === 'quotes' ? 'Quotes' : 'Growth'}
+        title={view === 'leads' ? 'Leads' : view === 'quotes' ? 'Quotes' : view === 'funnel' ? 'Funnel' : 'Growth'}
         right={
           view === 'leads' ? (
             <Pressable
@@ -41,12 +42,13 @@ export default function LeadsHome() {
         options={[
           { value: 'leads', label: 'Leads' },
           { value: 'quotes', label: 'Quotes' },
+          { value: 'funnel', label: 'Funnel' },
           { value: 'growth', label: 'Growth' },
         ]}
         value={view}
         onChange={setView}
       />
-      {view === 'leads' ? <LeadList /> : view === 'quotes' ? <QuoteList /> : <GrowthView />}
+      {view === 'leads' ? <LeadList /> : view === 'quotes' ? <QuoteList /> : view === 'funnel' ? <FunnelView /> : <GrowthView />}
     </Screen>
   );
 }
