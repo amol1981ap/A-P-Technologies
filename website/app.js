@@ -92,6 +92,7 @@
         msg.textContent = saved
           ? 'Thank you. We have your enquiry' + (haveWa ? ' and are opening WhatsApp.' : ' and will call you soon.')
           : (haveWa ? 'Opening WhatsApp…' : 'Could not send. Please try again.');
+        if (saved && window.__apThanks) window.__apThanks();
       }).catch(function () {
         if (haveWa) window.open(waLink(lines), '_blank', 'noopener');
         msg.textContent = haveWa ? 'Opening WhatsApp…' : 'Could not send. Please try again.';

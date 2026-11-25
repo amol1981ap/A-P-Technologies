@@ -137,3 +137,22 @@ These targets are starting guesses for a new B2B product. Replace them with your
 - The datasheet PDF and test certificates (for the certificate-request offer).
 - One reference project with photos and permission to publish.
 - Whether you want separate pages per application (drainage, sewage, highway, coastal) for ads.
+
+---
+
+## Built on the website (live once the branch is published)
+
+| Stage | What is now on the site |
+|---|---|
+| Awareness → landing | `?use=drainage`, `sewage`, `highway`, `coastal`, `flooring` changes the headline, intro and preselected project type. Use these links in ads and posts, with `utm_source` and `utm_campaign`. Example: `/?use=drainage&utm_source=instagram&utm_campaign=drain-nov` |
+| Trust | Strip under the hero (made in Kolhapur, test certificate with supply, GST registered, delivery across India) and a site-photo section |
+| Interest | Calculator result carries into the quote form |
+| Low-commitment capture | Data sheet is gated by name, phone and role. It lands in the lead inbox with the note "Requested the data sheet" and downloads straight away |
+| Question | "Ask on WhatsApp" button (pre-filled, mentions the project type) in the hero and a sticky bar on phones |
+| Enquiry | Quote form, then a thank-you panel that says what happens next |
+
+The data sheet link is gated on the page, but the PDF file itself is a public URL.
+
+**Deploy note:** `supabase/functions/public-enquiry` now merges a repeat enquiry from the same phone within a day into the existing lead (before, it was dropped). Deploy that function so a data sheet request followed by a quote request keeps the quote details.
+
+**Next stage: a person.** The funnel only works if every data-sheet and quote lead gets a call within two working hours. Use the first-reply, proof, quote and follow-up messages above.

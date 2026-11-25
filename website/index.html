@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="mark.svg">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,7 +20,7 @@
 <header class="nav">
   <div class="wrap nav-inner">
     <a href="#top" class="brand" aria-label="A P Technologies home">
-      <span class="brand-mark" aria-hidden="true"></span>
+      <img src="mark.svg" alt="" class="brand-img" width="30" height="30">
       <span>A P Technologies</span>
     </a>
     <nav aria-label="Main">
@@ -39,14 +40,20 @@
 
   <section class="hero">
     <div class="wrap">
-      <p class="eyebrow">GFRP Rebars · Manufactured &amp; supplied in India</p>
-      <h1>Reinforcement<br>that never rusts.</h1>
+      <p class="eyebrow" id="hero-eyebrow">GFRP Rebars · Manufactured &amp; supplied in India</p>
+      <h1 id="hero-h1">Reinforcement<br>that never rusts.</h1>
       <p class="lead">Ribbed and sand-coated glass fibre reinforced polymer rebars for highways, drainage, sewage and coastal structures. About a quarter of the weight of steel, and no corrosion over the life of the structure.</p>
       <div class="hero-cta">
         <a href="#enquiry" class="btn btn-primary">Get a quote</a>
-        <a href="#calculator" class="btn btn-ghost">Compare with steel</a>
-        <a href="AP-Technologies-GFRP-Rebar-Data-Sheet.pdf" class="btn btn-ghost" download>Download data sheet (PDF)</a>
+        <a href="#" class="btn btn-ghost" data-wa="question" target="_blank" rel="noopener">Ask on WhatsApp</a>
+        <a href="#datasheet" class="btn btn-ghost" data-datasheet>Get the data sheet</a>
       </div>
+      <ul class="trust">
+        <li>Manufactured in Kolhapur</li>
+        <li>Test certificate with every supply</li>
+        <li>GST registered</li>
+        <li>Delivered across India</li>
+      </ul>
     </div>
     <div class="wrap">
       <div class="hero-stats">
@@ -126,7 +133,7 @@
           <tbody id="size-table"></tbody>
         </table>
       </div>
-      <p class="note"><a href="AP-Technologies-GFRP-Rebar-Data-Sheet.pdf" download><strong>Download the full data sheet (PDF)</strong></a> with properties, technical data, weights and site photos.</p>
+      <p class="note"><a href="#datasheet" data-datasheet><strong>Get the full data sheet (PDF)</strong></a> with properties, technical data, weights and site photos.</p>
       <p class="note">Custom lengths, bends and stirrups are made in the factory to your bar bending schedule. GFRP cannot be bent on site. Test certificates are supplied with every order.</p>
     </div>
   </section>
@@ -156,7 +163,27 @@
     </div>
   </section>
 
-  <section class="section">
+  <section id="proof" class="section">
+    <div class="wrap">
+      <p class="eyebrow">On site</p>
+      <h2>Our rebars at work.</h2>
+      <p class="lead small">Road drainage, compound walls, boundary walls and RCC gutters, with bent bars made in our factory.</p>
+      <div class="photos">
+        <figure><img src="images/photo5.png" alt="GFRP rebars in a road drainage section" loading="lazy"><figcaption>Road drainage</figcaption></figure>
+        <figure><img src="images/photo6.png" alt="GFRP rebar cage for a roadside drain" loading="lazy"><figcaption>Boundary wall and roadside drain</figcaption></figure>
+        <figure><img src="images/photo3.png" alt="Bent GFRP bars for an RCC gutter along a road" loading="lazy"><figcaption>Bent bars for RCC gutter</figcaption></figure>
+        <figure><img src="images/photo4.png" alt="GFRP rebar columns for a compound wall" loading="lazy"><figcaption>Compound wall columns</figcaption></figure>
+        <figure><img src="images/photo2.png" alt="Factory-bent GFRP stirrups" loading="lazy"><figcaption>Bent-up bars from the factory</figcaption></figure>
+        <figure><img src="images/photo7.png" alt="Indented and ribbed GFRP rebar surface" loading="lazy"><figcaption>Indented and ribbed surface</figcaption></figure>
+      </div>
+      <div class="cta-band">
+        <div><strong>Want the full technical data?</strong><span>Properties, load capacity, weights and photos in one PDF.</span></div>
+        <a href="#datasheet" class="btn btn-primary" data-datasheet>Get the data sheet</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
     <div class="wrap">
       <p class="eyebrow">Comparison</p>
       <h2>GFRP and steel, side by side.</h2>
@@ -176,7 +203,7 @@
     </div>
   </section>
 
-  <section id="faq" class="section section-alt">
+  <section id="faq" class="section">
     <div class="wrap narrow">
       <p class="eyebrow">FAQ</p>
       <h2>Common questions.</h2>
@@ -192,8 +219,8 @@
   <section id="enquiry" class="section">
     <div class="wrap narrow">
       <p class="eyebrow">Enquiry</p>
-      <h2>Get a quote on WhatsApp.</h2>
-      <p class="lead small">Tell us about your project. We save your details and open WhatsApp so you can message us directly. We reply with a quotation and technical comparison.</p>
+      <h2>Get your quotation.</h2>
+      <p class="lead small">Tell us about your project. We save your details and open WhatsApp so you can message us directly. We call you, then send a quotation and technical comparison.</p>
       <form class="enquiry" id="enquiry-form">
         <input type="text" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
         <div class="row">
@@ -218,9 +245,19 @@
         </div>
         <label>Approximate quantity<input name="qty" placeholder="e.g. 20 tonnes steel equivalent, or 50,000 m of 10 mm"></label>
         <label>Message<textarea name="message" rows="3" placeholder="Diameters, timeline, drawings available…"></textarea></label>
-        <button type="submit" class="btn btn-primary btn-block">Send on WhatsApp</button>
+        <button type="submit" class="btn btn-primary btn-block">Get my quote</button>
         <p class="form-msg" id="form-msg" role="status"></p>
       </form>
+      <div id="thanks" class="thanks" hidden>
+    <h2>Thank you. We have your enquiry.</h2>
+    <p class="lead small">We will call you shortly. Here is what happens next.</p>
+    <ol class="steps">
+      <li><strong>We call you</strong> within working hours to confirm sizes, quantity and delivery location.</li>
+      <li><strong>You get a quotation</strong> and technical comparison on WhatsApp.</li>
+      <li><strong>Your engineer can check the data.</strong> Send them the data sheet and we will speak to them directly.</li>
+    </ol>
+    <a href="#datasheet" class="btn btn-primary" data-datasheet>Get the data sheet</a>
+  </div>
     </div>
   </section>
 
@@ -229,12 +266,12 @@
 <footer class="footer">
   <div class="wrap footer-inner">
     <div>
-      <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>A P Technologies</span></div>
+      <div class="brand"><img src="mark.svg" alt="" class="brand-img" width="30" height="30"><span>A P Technologies</span></div>
       <p>Manufacturer &amp; supplier of GFRP rebars.</p>
     </div>
     <div class="contact">
       <a id="footer-wa" href="#enquiry">WhatsApp us</a>
-      <a href="AP-Technologies-GFRP-Rebar-Data-Sheet.pdf" download>Download data sheet (PDF)</a>
+      <a href="#datasheet" data-datasheet>Get the data sheet (PDF)</a>
       <span><strong>Office:</strong> A708, Anantpuram Residence, Bapat Camp, Kolhapur 416005</span>
       <span><strong>Works:</strong> A/p. Mangaon, Tal-Hatkanagale, Dist-Kolhapur 416118</span>
       <span>GSTIN: 27APNPP5286R1ZN</span>
@@ -243,7 +280,29 @@
   <div class="wrap copy">© <span id="year"></span> A P Technologies</div>
 </footer>
 
+<dialog id="ds-dialog" class="dialog" aria-labelledby="ds-title">
+  <form method="dialog" id="ds-form" class="enquiry">
+    <h3 id="ds-title">Get the GFRP rebar data sheet</h3>
+    <p class="note">Properties, load capacity, weights and site photos. Enter your details and the PDF downloads.</p>
+    <input type="text" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+    <label>Name<input name="name" required autocomplete="name"></label>
+    <label>Phone<input name="phone" type="tel" required autocomplete="tel" inputmode="tel"></label>
+    <label>I am a
+      <select name="role"><option>Contractor</option><option>Developer / Builder</option><option>Consultant / Engineer</option><option>Government department</option><option>Dealer</option><option>Other</option></select>
+    </label>
+    <button type="submit" class="btn btn-primary btn-block">Download data sheet</button>
+    <button type="button" class="btn btn-ghost btn-block" id="ds-cancel">Cancel</button>
+    <p class="form-msg" id="ds-msg" role="status"></p>
+  </form>
+</dialog>
+
+<div class="sticky-cta" aria-label="Quick contact">
+  <a href="#" class="btn btn-ghost" data-wa="question" target="_blank" rel="noopener">WhatsApp</a>
+  <a href="#enquiry" class="btn btn-primary">Get a quote</a>
+</div>
+
 <script src="config.js"></script>
 <script src="app.js"></script>
+<script src="funnel.js"></script>
 </body>
 </html>

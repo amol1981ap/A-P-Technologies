@@ -51,8 +51,28 @@ Deno.serve(async (req) => {
 
   // The same phone within a day is the same lead.
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-  const { data: dup } = await admin.from('leads').select('id').eq('phone', phone).gte('created_at', since).limit(1);
-  if (dup && dup.length > 0) return json({ ok: true, duplicate: true });
+  const { data: dup } = await admin
+    .from('leads')
+    .select('id, company, project_type, location, quantity_note, notes')
+    .eq('phone', phone)
+    .gte('created_at', since)
+    .limit(1);
+  if (dup && dup.length > 0) {
+    // E.g. a data sheet request followed by a quote enquiry: keep the new details on the same lead.
+    const d = dup[0];
+    const notes = [d.notes, lead.notes].filter(Boolean).join(' | ').slice(0, 1000) || null;
+    await admin
+      .from('leads')
+      .update({
+        company: d.company ?? lead.company,
+        project_type: lead.project_type ?? d.project_type,
+        location: d.location ?? lead.location,
+        quantity_note: d.quantity_note ?? lead.quantity_note,
+        notes,
+      })
+      .eq('id', d.id);
+    return json({ ok: true, duplicate: true });
+  }
 
   const { error } = await admin.from('leads').insert({ ...lead, score: scoreLead(lead) });
   if (error) return json({ error: 'Could not save your enquiry. Please try WhatsApp.' }, 500);
