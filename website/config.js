@@ -60,7 +60,6 @@ window.SITE_CONFIG = {
 
   // Our factory (photos in projects/).
   factory: [
-    { caption: "Pultrusion line", image: "projects/factory-line.jpg" },
     { caption: "Coiled rebar, 50 to 100 m", image: "projects/coil.jpg" },
     { caption: "Bent stirrups made to order", image: "projects/stirrups.jpg" },
     { caption: "Loading for despatch", image: "projects/loading.jpg" }
