@@ -127,10 +127,11 @@
     docs.forEach(function (d) {
       var card = el('article', 'doc');
       var href = safeUrl(d.file);
-      if (href && isImage(href)) {
+      var thumb = safeUrl(d.thumb) || (href && isImage(href) ? href : '');
+      if (href && thumb) {
         var link = el('a', 'doc-thumb'); link.href = href; link.target = '_blank'; link.rel = 'noopener';
         link.setAttribute('aria-label', 'Open document: ' + (d.title || ''));
-        var img = el('img'); img.src = href; img.alt = d.title || 'Document'; img.loading = 'lazy';
+        var img = el('img'); img.src = thumb; img.alt = d.title || 'Document'; img.loading = 'lazy';
         link.appendChild(img); card.appendChild(link);
       }
       card.appendChild(el('span', 'chip', d.type || 'Document'));
@@ -139,7 +140,7 @@
       if (meta) card.appendChild(el('p', 'meta', meta));
       if (d.note) card.appendChild(el('p', '', d.note));
       if (href) {
-        var a = el('a', 'btn btn-ghost btn-sm', isImage(href) ? 'View document' : 'View PDF');
+        var a = el('a', 'btn btn-ghost btn-sm', isImage(href) ? 'View document' : 'Open PDF');
         a.href = href; a.target = '_blank'; a.rel = 'noopener';
         card.appendChild(a);
       }

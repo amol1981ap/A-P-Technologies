@@ -14,19 +14,21 @@ window.SITE_CONFIG = {
   documents: [
     {
       type: "Government circular",
-      title: "MoRTH circular: Value engineering practices for National Highways projects",
+      title: "Circular: Value engineering practices for the design, construction and maintenance of National Highways projects",
       issuer: "Ministry of Road Transport & Highways, Government of India",
       ref: "File No. RW/NH-34049/01/2020-S&R (P&B)pt.",
       date: "2022-08-30",
-      note: "Section 4 allows glass, carbon and aramid fibre reinforced polymer rebar for non-load-bearing and minor CD structures such as crash barriers, drains, Hume pipe and box culverts.",
-      file: "docs/morth-circular-2022-08-30.jpg"
+      note: "Appendix-1, section 4: use of glass, carbon and aramid fibre reinforced polymer rebar for non-load-bearing and minor CD structures such as crash barriers, drains, Hume pipe and box culverts.",
+      file: "docs/morth-circular-2022-08-30.pdf",
+      thumb: "docs/thumb-morth.jpg"
     },
     {
       type: "Guideline",
-      title: "IRC:137-2022 Guidelines for use of GFRP rebar in highway and infrastructure projects",
-      issuer: "Indian Roads Congress",
-      note: "Table 3.1 lists the concrete components where GFRP bars are permitted: approach slabs, bridge decks, retaining walls, noise barriers, box culverts, crash barriers, drainage structures and more.",
-      file: "docs/irc-137-2022-table-3-1.jpg"
+      title: "IRC:137-2022 Guidelines on use of fibre-reinforced polymer bars in road projects (Part 1: Glass fibre-reinforced polymer bars)",
+      issuer: "Indian Roads Congress, 2022",
+      note: "Table 3.1 lists the concrete components where GFRP bars are permitted: approach slabs, bridge decks, retaining walls, noise barriers, box culverts, crash barriers, drainage structures and more. Extract: cover and pages 8 and 9.",
+      file: "docs/irc-137-2022-extract.pdf",
+      thumb: "docs/thumb-irc.jpg"
     },
     {
       type: "Indian Standard",
@@ -39,9 +41,10 @@ window.SITE_CONFIG = {
     {
       type: "Government rate schedule",
       title: "Item 9.3: Solid round GFRP bars for concrete reinforcement (IS 18256:2023)",
-      issuer: "Public Works Department schedule of rates, excerpt",
+      issuer: "Public Works Department schedule of rates, 2023-24, page 87",
       note: "Lists GFRP bars conforming to IRC:137:2022 for crash barriers, concrete drains, concrete pavements and approach slabs.",
-      file: "docs/govt-rate-schedule-item-9-3.jpg"
+      file: "docs/rate-schedule-item-9-3.pdf",
+      thumb: "docs/thumb-rate.jpg"
     }
   ],
 
