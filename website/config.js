@@ -35,6 +35,13 @@ window.SITE_CONFIG = {
       date: "2023-10",
       note: "The national specification for GFRP bars used to reinforce concrete. Shown here as a general reference.",
       file: "docs/is-18256-2023-cover.jpg"
+    },
+    {
+      type: "Government rate schedule",
+      title: "Item 9.3: Solid round GFRP bars for concrete reinforcement (IS 18256:2023)",
+      issuer: "Public Works Department schedule of rates, excerpt",
+      note: "Lists GFRP bars conforming to IRC:137:2022 for crash barriers, concrete drains, concrete pavements and approach slabs.",
+      file: "docs/govt-rate-schedule-item-9-3.jpg"
     }
   ],
 
