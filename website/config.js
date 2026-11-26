@@ -33,15 +33,8 @@ window.SITE_CONFIG = {
       title: "IS 18256:2023 Solid round glass fibre reinforced polymer (GFRP) bars for concrete reinforcement: Specification",
       issuer: "Bureau of Indian Standards",
       date: "2023-10",
+      note: "The national specification for GFRP bars used to reinforce concrete. Shown here as a general reference.",
       file: "docs/is-18256-2023-cover.jpg"
-    },
-    {
-      type: "State schedule of rates",
-      title: "Karnataka PWD Schedule of Rates for Roads & Bridges 2023-24, Volume 3",
-      issuer: "Public Works Department, Karnataka",
-      ref: "Item 9.3",
-      note: "Lists GFRP bars conforming to IRC:137:2022 and IS 18256:2023 for crash barriers, concrete drains, concrete pavements and approach slabs.",
-      file: "docs/kpwd-sr-2023-24-vol3-item-9-3.jpg"
     }
   ],
 
