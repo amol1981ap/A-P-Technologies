@@ -136,3 +136,14 @@ details p { margin-top: 12px; color: var(--muted); }
 .footer-inner p { margin-top: 8px; }
 .contact { display: flex; flex-direction: column; gap: 6px; }
 .copy { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); }
+
+/* Documents and supplies */
+.doc { background: var(--bg-alt); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.section-alt .doc { background: var(--card); }
+.doc h3 { font-size: 18px; font-weight: 600; }
+.doc p { color: var(--muted); font-size: 15px; }
+.doc .btn { margin-top: auto; }
+.chip { display: inline-block; font-size: 12px; font-weight: 600; color: var(--accent-text); background: var(--hl); border-radius: 980px; padding: 3px 10px; }
+.sub { font-size: 22px; font-weight: 600; margin-top: 56px; }
+#projects[hidden] { display: none; }
+.proj-img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; }

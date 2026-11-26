@@ -110,6 +110,58 @@
     });
   } catch (e) {}
 
+
+  // Documents and supplies, filled from config.js. Nothing is shown that is not listed there.
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; }
+  function safeUrl(u) { return /^(docs|projects)\/[\w.\-\/ ]+$/.test(u || '') ? encodeURI(u) : ''; }
+  function fmtDate(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }); }
+
+  var docList = document.getElementById('doc-list');
+  var docNote = document.getElementById('doc-note');
+  var docs = Array.isArray(cfg.documents) ? cfg.documents : [];
+  if (docList) {
+    docs.forEach(function (d) {
+      var card = el('article', 'doc');
+      card.appendChild(el('span', 'chip', d.type || 'Document'));
+      card.appendChild(el('h3', '', d.title || ''));
+      var meta = [d.issuer, d.ref ? 'Ref ' + d.ref : '', d.date ? fmtDate(d.date) : ''].filter(Boolean).join(' · ');
+      if (meta) card.appendChild(el('p', '', meta));
+      var href = safeUrl(d.file);
+      if (href) {
+        var a = el('a', 'btn btn-ghost btn-sm', 'View PDF');
+        a.href = href; a.target = '_blank'; a.rel = 'noopener';
+        card.appendChild(a);
+      }
+      docList.appendChild(card);
+    });
+    if (docs.length === 0) {
+      var ask = el('article', 'doc');
+      ask.appendChild(el('h3', '', 'Request our documents'));
+      ask.appendChild(el('p', '', 'Test reports, company registrations and technical data sheets for your project. Tell us what your consultant needs.'));
+      var wa = el('a', 'btn btn-primary btn-sm', 'Ask on WhatsApp');
+      wa.href = /^\d{10,15}$/.test(num) ? waLink('Hello A P Technologies, please send the documents for GFRP rebars.') : '#enquiry';
+      ask.appendChild(wa);
+      docList.appendChild(ask);
+    }
+  }
+  if (docNote) docNote.textContent = 'Approval and acceptance of any material is decided by the project consultant or authority for each project. We supply the test reports and data they need.';
+
+  var projBox = document.getElementById('projects');
+  var projList = document.getElementById('project-list');
+  var projs = Array.isArray(cfg.projects) ? cfg.projects : [];
+  if (projBox && projList && projs.length > 0) {
+    projs.forEach(function (p) {
+      var card = el('article', 'app');
+      var img = safeUrl(p.image);
+      if (img) { var i = el('img', 'proj-img'); i.src = img; i.alt = p.name || 'Project'; i.loading = 'lazy'; card.appendChild(i); }
+      card.appendChild(el('h3', '', p.name || ''));
+      var meta = [p.application, p.location, p.quantity].filter(Boolean).join(' · ');
+      if (meta) card.appendChild(el('p', '', meta));
+      projList.appendChild(card);
+    });
+    projBox.hidden = false;
+  }
+
   var y = document.getElementById('year');
   if (y) y.textContent = new Date().getFullYear();
 })();
