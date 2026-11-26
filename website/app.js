@@ -111,56 +111,81 @@
   } catch (e) {}
 
 
-  // Documents and supplies, filled from config.js. Nothing is shown that is not listed there.
+  // Documents, factory photos and site photos, filled from config.js. Nothing is shown that is not listed there.
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; }
-  function safeUrl(u) { return /^(docs|projects)\/[\w.\-\/ ]+$/.test(u || '') ? encodeURI(u) : ''; }
-  function fmtDate(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }); }
+  function safeUrl(u) { return /^(docs|projects|img)\/[\w.\-\/ ]+$/.test(u || '') ? encodeURI(u) : ''; }
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return /^\d{4}-\d{2}$/.test(iso) ? d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function isImage(u) { return /\.(jpe?g|png|webp)$/i.test(u); }
 
   var docList = document.getElementById('doc-list');
-  var docNote = document.getElementById('doc-note');
   var docs = Array.isArray(cfg.documents) ? cfg.documents : [];
   if (docList) {
     docs.forEach(function (d) {
       var card = el('article', 'doc');
+      var href = safeUrl(d.file);
+      if (href && isImage(href)) {
+        var link = el('a', 'doc-thumb'); link.href = href; link.target = '_blank'; link.rel = 'noopener';
+        link.setAttribute('aria-label', 'Open document: ' + (d.title || ''));
+        var img = el('img'); img.src = href; img.alt = d.title || 'Document'; img.loading = 'lazy';
+        link.appendChild(img); card.appendChild(link);
+      }
       card.appendChild(el('span', 'chip', d.type || 'Document'));
       card.appendChild(el('h3', '', d.title || ''));
-      var meta = [d.issuer, d.ref ? 'Ref ' + d.ref : '', d.date ? fmtDate(d.date) : ''].filter(Boolean).join(' · ');
-      if (meta) card.appendChild(el('p', '', meta));
-      var href = safeUrl(d.file);
+      var meta = [d.issuer, d.ref, d.date ? fmtDate(d.date) : ''].filter(Boolean).join(' · ');
+      if (meta) card.appendChild(el('p', 'meta', meta));
+      if (d.note) card.appendChild(el('p', '', d.note));
       if (href) {
-        var a = el('a', 'btn btn-ghost btn-sm', 'View PDF');
+        var a = el('a', 'btn btn-ghost btn-sm', isImage(href) ? 'View document' : 'View PDF');
         a.href = href; a.target = '_blank'; a.rel = 'noopener';
         card.appendChild(a);
       }
       docList.appendChild(card);
     });
-    if (docs.length === 0) {
-      var ask = el('article', 'doc');
-      ask.appendChild(el('h3', '', 'Request our documents'));
-      ask.appendChild(el('p', '', 'Test reports, company registrations and technical data sheets for your project. Tell us what your consultant needs.'));
-      var wa = el('a', 'btn btn-primary btn-sm', 'Ask on WhatsApp');
-      wa.href = /^\d{10,15}$/.test(num) ? waLink('Hello A P Technologies, please send the documents for GFRP rebars.') : '#enquiry';
-      ask.appendChild(wa);
-      docList.appendChild(ask);
-    }
+    var ask = el('article', 'doc');
+    ask.appendChild(el('h3', '', 'Need another document?'));
+    ask.appendChild(el('p', '', 'Test reports and company documents for your project. Tell us what your consultant needs.'));
+    var wa = el('a', 'btn btn-primary btn-sm', 'Ask on WhatsApp');
+    wa.href = /^\d{10,15}$/.test(num) ? waLink('Hello A P Technologies, please send the documents for GFRP rebars.') : '#enquiry';
+    ask.appendChild(wa);
+    docList.appendChild(ask);
   }
-  if (docNote) docNote.textContent = 'Approval and acceptance of any material is decided by the project consultant or authority for each project. We supply the test reports and data they need.';
+  var stdList = document.getElementById('std-list');
+  if (stdList && Array.isArray(cfg.standards)) cfg.standards.forEach(function (t) { stdList.appendChild(el('li', '', t)); });
+  var docNote = document.getElementById('doc-note');
+  if (docNote) docNote.textContent = 'These are the published government documents and standards that govern GFRP bars in India. Approval and acceptance of any material is decided by the project consultant or authority for each project.';
 
-  var projBox = document.getElementById('projects');
-  var projList = document.getElementById('project-list');
-  var projs = Array.isArray(cfg.projects) ? cfg.projects : [];
-  if (projBox && projList && projs.length > 0) {
-    projs.forEach(function (p) {
-      var card = el('article', 'app');
+  function gallery(listId, boxId, items, tag) {
+    var box = boxId ? document.getElementById(boxId) : null;
+    var list = document.getElementById(listId);
+    if (!list || !Array.isArray(items) || items.length === 0) return;
+    items.forEach(function (p) {
+      var card = el('figure', 'shot');
       var img = safeUrl(p.image);
-      if (img) { var i = el('img', 'proj-img'); i.src = img; i.alt = p.name || 'Project'; i.loading = 'lazy'; card.appendChild(i); }
-      card.appendChild(el('h3', '', p.name || ''));
-      var meta = [p.application, p.location, p.quantity].filter(Boolean).join(' · ');
-      if (meta) card.appendChild(el('p', '', meta));
-      projList.appendChild(card);
+      if (img) { var i = el('img'); i.src = img; i.alt = (p.caption || p.name || '') + (p.location ? ', ' + p.location : ''); i.loading = 'lazy'; card.appendChild(i); }
+      var cap = el('figcaption');
+      cap.appendChild(el('strong', '', p.caption || p.name || ''));
+      var meta = [p.application, p.location].filter(Boolean).join(' · ');
+      if (meta) cap.appendChild(el('span', '', meta));
+      card.appendChild(cap);
+      list.appendChild(card);
     });
-    projBox.hidden = false;
+    if (box) box.hidden = false;
   }
+  gallery('project-list', 'projects', cfg.projects);
+  gallery('factory-list', 'factory', cfg.factory);
+
+  // Contact details in the footer.
+  var ph = document.getElementById('footer-phones');
+  if (ph && Array.isArray(cfg.phones)) cfg.phones.forEach(function (n, i) {
+    if (i) ph.appendChild(document.createTextNode(' · '));
+    var a = el('a', '', n); a.href = 'tel:+91' + n; ph.appendChild(a);
+  });
+  var em = document.getElementById('footer-email');
+  if (em && cfg.email) { em.textContent = cfg.email; em.href = 'mailto:' + cfg.email; }
 
   var y = document.getElementById('year');
   if (y) y.textContent = new Date().getFullYear();

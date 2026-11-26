@@ -12,6 +12,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta property="og:image" content="img/logo.png">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,7 +22,7 @@
 <header class="nav">
   <div class="wrap nav-inner">
     <a href="#top" class="brand" aria-label="A P Technologies home">
-      <span class="brand-mark" aria-hidden="true"></span>
+      <img class="brand-logo" src="img/logo.png" alt="" width="28" height="28">
       <span>A P Technologies</span>
     </a>
     <nav aria-label="Main">
@@ -100,7 +103,7 @@
         <article class="app"><h3>Precast &amp; general civil</h3><p>Precast units, water tanks, swimming pools, basements and boundary walls.</p></article>
       </div>
       <div id="projects" hidden>
-        <h3 class="sub">Our supplies</h3>
+        <h3 class="sub">From our sites</h3>
         <div class="grid-3" id="project-list"></div>
       </div>
     </div>
@@ -130,7 +133,7 @@
           <tbody id="size-table"></tbody>
         </table>
       </div>
-      <p class="note">Custom lengths, bends and stirrups are made in the factory to your bar bending schedule. GFRP cannot be bent on site. Test certificates are supplied with every order.</p>
+      <p class="note">Supplied as long straight rods, straight cut lengths, straight coils of 50 to 100 m and coiled mesh. Custom lengths, bends and stirrups are made in the factory to your bar bending schedule. GFRP cannot be bent on site. Test certificates are supplied with every order.</p>
     </div>
   </section>
 
@@ -182,10 +185,21 @@
   <section id="documents" class="section">
     <div class="wrap">
       <p class="eyebrow">Documents</p>
-      <h2>Approvals, test reports and company documents.</h2>
-      <p class="lead small">Download the documents your consultant or authority engineer asks for. Need one that is not listed? Ask us and we send it on WhatsApp.</p>
+      <h2>Government documents and standards for GFRP bars.</h2>
+      <p class="lead small">The published documents your consultant or authority engineer will ask about. Tap a document to open it in full.</p>
       <div class="grid-3" id="doc-list"></div>
+      <h3 class="sub">Guidelines and standards used in India</h3>
+      <ul class="std" id="std-list"></ul>
       <p class="note" id="doc-note"></p>
+    </div>
+  </section>
+
+  <section id="factory" class="section section-alt" hidden>
+    <div class="wrap">
+      <p class="eyebrow">Our factory</p>
+      <h2>Made in Kolhapur.</h2>
+      <p class="lead small">Straight rods, cut lengths, coils of 50 to 100 m, mesh and bent shapes, made to your schedule.</p>
+      <div class="grid-4" id="factory-list"></div>
     </div>
   </section>
 
@@ -193,7 +207,7 @@
     <div class="wrap narrow">
       <p class="eyebrow">FAQ</p>
       <h2>Common questions.</h2>
-      <details><summary>Is GFRP approved for highway and government projects?</summary><p>GFRP reinforcement is covered by international FRP design codes and is increasingly specified in Indian infrastructure. Approval is project-specific and is given by the consultant or authority engineer. We provide the test reports and technical data they need.</p></details>
+      <details><summary>Is GFRP approved for highway and government projects?</summary><p>IRC:137-2022 lists the concrete components where GFRP bars are permitted, and a Ministry of Road Transport &amp; Highways circular dated 30 August 2022 allows GFRP rebar for non-load-bearing and minor cross-drainage structures such as crash barriers, drains and culverts. IS 18256:2023 is the Bureau of Indian Standards specification. See the Documents section. Acceptance for a particular project is decided by the consultant or authority engineer, and we provide the test reports and data they need.</p></details>
       <details><summary>Can GFRP replace steel one-to-one?</summary><p>Not automatically. GFRP has a different stiffness from steel, so bar size and spacing are designed by the structural engineer. In many slabs, drains and walls the design works out lighter and more economical than steel over the structure's life.</p></details>
       <details><summary>Can bars be bent on site?</summary><p>No. Bends, stirrups and custom shapes are manufactured in our factory to your bar bending schedule.</p></details>
       <details><summary>How is it tied and placed?</summary><p>Much like steel, using plastic or coated tie wire and standard chairs. Because the bars are light, placement is faster.</p></details>
@@ -242,11 +256,13 @@
 <footer class="footer">
   <div class="wrap footer-inner">
     <div>
-      <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>A P Technologies</span></div>
+      <div class="brand"><img class="brand-logo" src="img/logo.png" alt="" width="28" height="28"><span>A P Technologies</span></div>
       <p>Manufacturer &amp; supplier of GFRP rebars.</p>
     </div>
     <div class="contact">
       <a id="footer-wa" href="#enquiry">WhatsApp us</a>
+      <span id="footer-phones"></span>
+      <a id="footer-email" href="#enquiry"></a>
       <span><strong>Office:</strong> A708, Anantpuram Residence, Bapat Camp, Kolhapur 416005</span>
       <span><strong>Works:</strong> A/p. Mangaon, Tal-Hatkanagale, Dist-Kolhapur 416118</span>
       <span>GSTIN: 27APNPP5286R1ZN</span>

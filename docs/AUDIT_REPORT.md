@@ -38,3 +38,8 @@
 - Weight per metre: owner's table is the plain (ribbed) bar: 8 mm 0.105, 10 mm 0.158, 12 mm 0.23, 16 mm 0.41, 18 mm 0.506, 20 mm 0.625, 22 mm 0.756, 24 mm 0.900 kg/m. Sand-coated adds 0.010 kg/m (12 mm sand-coated = 0.24).
 - Bent-up bars are separate products (shape: straight / bent-up), starting at ₹180/kg versus ₹150/kg straight, GST 18%. Weight per metre is the same as the straight bar of that surface. Batch numbers end in B (261121-12SB).
 - Quick start adds a size set in one tap with those starting rates; the owner can change any rate or weight.
+
+## Website documents and logo (from the owner's brochure and presentation)
+- Logo: AP crest taken from the brochure. Website logo and favicon, and all app icons (icon, Android adaptive, monochrome, splash) now use it. High-resolution copy: docs/assets-ap-logo-1024.png.
+- Website Documents section shows four published government documents exactly as issued: MoRTH circular dated 30 August 2022 (File No. RW/NH-34049/01/2020-S&R (P&B)pt.), IRC:137-2022 Table 3.1, IS 18256:2023 (BIS, October 2023), Karnataka PWD SR 2023-24 Vol. 3 item 9.3.
+- Not shown, needs the owner: A P Technologies' own test reports, any BIS licence number, Udyam/GST certificates, and permission to name customer projects.
