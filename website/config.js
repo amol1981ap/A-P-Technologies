@@ -76,6 +76,6 @@ window.SITE_CONFIG = {
   ],
 
   // Contact.
-  phones: ["8180821364", "9011095915"],
+  phones: ["8180821364"],
   email: "support@aptechno.biz"
 };
