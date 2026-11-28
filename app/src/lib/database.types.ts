@@ -228,6 +228,8 @@ export type Prospect = {
   role: string | null;
   location: string | null;
   phone: string | null;
+  email: string | null;
+  permission: boolean;
   project_note: string | null;
   found_via: string | null;
   status: ProspectStatus;

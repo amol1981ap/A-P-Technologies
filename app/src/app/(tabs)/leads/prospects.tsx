@@ -1,12 +1,16 @@
+import * as DocumentPicker from 'expo-document-picker';
+import { File } from 'expo-file-system';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Linking, Pressable, View } from 'react-native';
+import { Linking, Platform, Pressable, View } from 'react-native';
 
 import { Body, Button, Card, Chip, ChipPicker, Empty, ErrorText, Field, Loading, Notice, Screen, Segmented, type Tone } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { addDaysIso, waNumber } from '@/lib/calc';
 import type { Prospect, ProspectStatus } from '@/lib/database.types';
-import { PROSPECT_STATUS_LABEL, useConvertProspect, useProspects, useSaveProspect } from '@/lib/growth-queries';
+import { PROSPECT_STATUS_LABEL, useConvertProspect, useImportProspects, useProspects, useSaveProspect } from '@/lib/growth-queries';
+import { previewProspectCsv, TEMPLATE_CSV, type ImportPreview } from '@/lib/prospect-import';
+import { shareCsv } from '@/lib/quote-pdf';
 import { blankToNull, useCompany } from '@/lib/queries';
 
 const ROLES = ['Contractor', 'Developer / Builder', 'Consultant', 'Government', 'Dealer', 'Other'];
@@ -22,6 +26,7 @@ export default function ProspectsScreen() {
   const [filter, setFilter] = useState<Filter>('active');
   const [adding, setAdding] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const shown = useMemo(() => {
     const all = data ?? [];
@@ -49,6 +54,11 @@ export default function ProspectsScreen() {
         <ProspectCard key={p.id} p={p} open={openId === p.id} onToggle={() => setOpenId(openId === p.id ? null : p.id)} />
       ))}
       {adding ? <NewProspect onDone={() => setAdding(false)} /> : <Button label="Add prospect" onPress={() => setAdding(true)} />}
+      {importing ? (
+        <ImportPanel existing={data ?? []} onDone={() => setImporting(false)} />
+      ) : (
+        <Button label="Import CSV" variant="secondary" onPress={() => setImporting(true)} />
+      )}
     </Screen>
   );
 }
@@ -106,6 +116,8 @@ function ProspectCard({ p, open, onToggle }: { p: Prospect; open: boolean; onTog
             <Notice>Add a phone number to send an opener.</Notice>
           )}
           {p.phone ? <Button label="Call" variant="secondary" onPress={() => Linking.openURL(`tel:${p.phone}`)} /> : null}
+          {p.email ? <Button label={`Email ${p.email}`} variant="secondary" onPress={() => Linking.openURL(`mailto:${p.email}`)} /> : null}
+          {p.permission ? <Body muted size={13}>They asked to hear from us.</Body> : null}
           {p.status !== 'converted' && p.status !== 'dropped' ? (
             <>
               <Segmented
@@ -186,6 +198,66 @@ function NewProspect({ onDone }: { onDone: () => void }) {
       <ErrorText>{msg}</ErrorText>
       <Button label="Add prospect" onPress={submit} busy={save.isPending} />
       <Button label="Cancel" variant="secondary" onPress={onDone} />
+    </Card>
+  );
+}
+
+function ImportPanel({ existing, onDone }: { existing: Prospect[]; onDone: () => void }) {
+  const save = useImportProspects();
+  const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const [fileName, setFileName] = useState('');
+  const [msg, setMsg] = useState('');
+  const [done, setDone] = useState('');
+
+  async function pick() {
+    setMsg('');
+    setDone('');
+    setPreview(null);
+    try {
+      const res = await DocumentPicker.getDocumentAsync({ type: ['text/csv', 'text/comma-separated-values', 'application/vnd.ms-excel', 'text/plain', '*/*'], copyToCacheDirectory: true });
+      if (res.canceled || !res.assets[0]) return;
+      const a = res.assets[0];
+      const text = Platform.OS === 'web' && a.file ? await a.file.text() : await new File(a.uri).text();
+      setFileName(a.name);
+      setPreview(previewProspectCsv(text, existing));
+    } catch (e) {
+      setMsg(`Could not read that file: ${(e as Error).message}`);
+    }
+  }
+
+  async function confirm() {
+    if (!preview) return;
+    setMsg('');
+    try {
+      const n = await save.mutateAsync(preview.fresh);
+      setDone(`Added ${n} ${n === 1 ? 'contact' : 'contacts'} to To contact.`);
+      setPreview(null);
+    } catch (e) {
+      setMsg((e as Error).message);
+    }
+  }
+
+  return (
+    <Card style={{ gap: Spacing.three }}>
+      <Body weight="semibold" size={16}>Import contacts from a CSV file</Body>
+      <Body muted size={13}>Business contacts only: company numbers and work emails, from award lists, tender notices, meetings and enquiries. Do not import lists bought or copied in bulk from directories. You send each message yourself.</Body>
+      <Button label="Get the CSV template" variant="secondary" onPress={() => shareCsv(TEMPLATE_CSV, 'prospects-template.csv').catch((e) => setMsg((e as Error).message))} />
+      <Button label={preview ? 'Choose a different file' : 'Choose a CSV file'} variant="secondary" onPress={pick} />
+      <ErrorText>{msg}</ErrorText>
+      {done ? <Notice>{done}</Notice> : null}
+      {preview ? (
+        <View style={{ gap: Spacing.two }}>
+          <Body weight="medium">{fileName}</Body>
+          <Body>{preview.fresh.length} new · {preview.duplicates.length} already in your list · {preview.problems.length} {preview.problems.length === 1 ? 'problem' : 'problems'}</Body>
+          {preview.duplicates.length > 0 ? <Body muted size={13}>Skipped as duplicates: {preview.duplicates.slice(0, 5).map((d) => d.name).join(', ')}{preview.duplicates.length > 5 ? '…' : ''}</Body> : null}
+          {preview.problems.slice(0, 8).map((p) => (
+            <Body key={`${p.line}-${p.text}`} size={13} style={{ color: '#8A4321' }}>Line {p.line}: {p.text}</Body>
+          ))}
+          {preview.problems.length > 8 ? <Body muted size={13}>…and {preview.problems.length - 8} more.</Body> : null}
+          {preview.fresh.length > 0 ? <Button label={`Import ${preview.fresh.length} ${preview.fresh.length === 1 ? 'contact' : 'contacts'}`} onPress={confirm} busy={save.isPending} /> : <Notice>Nothing new to import.</Notice>}
+        </View>
+      ) : null}
+      <Button label="Close" variant="secondary" onPress={onDone} />
     </Card>
   );
 }

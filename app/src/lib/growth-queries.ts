@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 
 import type { LeadSource, Prospect, ProspectStatus } from './database.types';
+import type { ProspectRow } from './prospect-import';
 import { supabase } from './supabase';
 
 function unwrap<R extends { data: unknown; error: { message: string } | null }>(res: R): NonNullable<R['data']> {
@@ -90,6 +91,20 @@ export function useConvertProspect() {
       );
       unwrap(await supabase.from('prospects').update({ status: 'converted', lead_id: lead.id }).eq('id', p.id).select().single());
       return lead.id;
+    },
+    onSuccess: () => invalidate(qc),
+  });
+}
+
+/** Saves a checked CSV import. Rows go in batches of 100 so a big file does not time out. */
+export function useImportProspects() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (rows: ProspectRow[]) => {
+      for (let i = 0; i < rows.length; i += 100) {
+        unwrap(await supabase.from('prospects').insert(rows.slice(i, i + 100)).select('id'));
+      }
+      return rows.length;
     },
     onSuccess: () => invalidate(qc),
   });
