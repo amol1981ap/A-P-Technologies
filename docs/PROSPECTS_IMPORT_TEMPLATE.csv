@@ -1,0 +1,3 @@
+﻿Name (person),Company / department,Role,City / district,State,Phone (business),Email (business),Project or interest,Source (where you found this contact),Source link,Permission (yes = they asked to hear from us; blank = first contact),Status (new / contacted / interested / dropped),Next action date (YYYY-MM-DD),Notes
+EXAMPLE - delete this row,Example Infra Pvt Ltd,Project manager,Belagavi,Karnataka,,,NH culverts and drains,Tender award notice,(link to the notice),,new,,Example only
+EXAMPLE - delete this row,Example Civil Works,Owner,Kolhapur,Maharashtra,,,RCC drains,Contractor association meeting,,yes,new,,Example only
