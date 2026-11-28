@@ -14,7 +14,7 @@ import qrcode, cv2, numpy as np
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--name', required=True); ap.add_argument('--title', required=True)
-ap.add_argument('--phone', required=True); ap.add_argument('--email', required=True)
+ap.add_argument('--phone', required=True); ap.add_argument('--email', required=True, nargs='+', help='one or two email addresses')
 ap.add_argument('--url', required=True); ap.add_argument('--out', required=True)
 a = ap.parse_args()
 
@@ -46,13 +46,15 @@ while ImageDraw.Draw(Image.new('RGB',(1,1))).textlength(a.name, font=font('serif
 
 A = Image.new('RGB', (W, H), 'white'); d = ImageDraw.Draw(A); L = mm(10)
 d.rectangle((0, 0, mm(3.2), H), fill=GOLD)
-d.text((L, mm(12)), a.name, font=font('serif', nm), fill=DARK)
-d.text((L, mm(21.5)), a.title.upper(), font=font('s', 7.5), fill=(150,115,30))
-d.text((L, mm(26)), 'A P Technologies  |  GFRP Rebars', font=font('r', 8), fill=DARK)
-y = mm(35)
-for lab, val in [('Call / WhatsApp', a.phone), ('Email', a.email)]:
-    d.text((L, y), lab.upper(), font=font('s', 5.5), fill=GREY); y += mm(2.7)
-    d.text((L, y), val, font=font('s', 8.5), fill=DARK); y += mm(5.2)
+d.text((L, mm(10.5)), a.name, font=font('serif', nm), fill=DARK)
+d.text((L, mm(20)), a.title.upper(), font=font('s', 7.5), fill=(150,115,30))
+d.text((L, mm(24.4)), 'A P Technologies  |  GFRP Rebars', font=font('r', 8), fill=DARK)
+y = mm(31.5)
+d.text((L, y), 'CALL / WHATSAPP', font=font('s', 5.5), fill=GREY); y += mm(2.7)
+d.text((L, y), a.phone, font=font('s', 8.5), fill=DARK); y += mm(5.0)
+d.text((L, y), 'EMAIL' if len(a.email) == 1 else 'EMAIL', font=font('s', 5.5), fill=GREY); y += mm(2.7)
+for e in a.email:
+    d.text((L, y), e, font=font('s', 8.5 if len(a.email) == 1 else 8), fill=DARK); y += mm(4.2)
 qx = W - mm(8.5) - QS; qy = mm(14)
 A.paste(qimg, (qx, qy))
 centered(d, 'Scan for our products', qy+QS+mm(0.6), font('s', 5.8), DARK, qx+QS/2)

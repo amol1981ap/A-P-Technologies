@@ -77,5 +77,5 @@ window.SITE_CONFIG = {
 
   // Contact.
   phones: ["8180821364"],
-  email: "support@aptechno.biz"
+  emails: ["support@aptechno.biz", "amolp3727@gmail.com"]
 };

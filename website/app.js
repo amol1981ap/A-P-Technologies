@@ -185,8 +185,12 @@
     if (i) ph.appendChild(document.createTextNode(' · '));
     var a = el('a', '', n); a.href = 'tel:+91' + n; ph.appendChild(a);
   });
-  var em = document.getElementById('footer-email');
-  if (em && cfg.email) { em.textContent = cfg.email; em.href = 'mailto:' + cfg.email; }
+  var em = document.getElementById('footer-emails');
+  var mails = Array.isArray(cfg.emails) ? cfg.emails : (cfg.email ? [cfg.email] : []);
+  if (em) mails.forEach(function (m, i) {
+    if (i) em.appendChild(document.createTextNode(' · '));
+    var l = el('a', '', m); l.href = 'mailto:' + m; em.appendChild(l);
+  });
 
   var y = document.getElementById('year');
   if (y) y.textContent = new Date().getFullYear();

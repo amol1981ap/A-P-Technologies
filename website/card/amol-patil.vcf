@@ -5,7 +5,8 @@ FN:Amol K Patil
 ORG:A P Technologies
 TITLE:Chief Executive Officer
 TEL;TYPE=CELL:+918180821364
-EMAIL:support@aptechno.biz
+EMAIL;TYPE=WORK:support@aptechno.biz
+EMAIL;TYPE=INTERNET:amolp3727@gmail.com
 URL:https://ap-technologies-henna.vercel.app/
 ADR;TYPE=WORK:;;A/p. Mangaon\, Tal. Hatkanangale;Kolhapur;Maharashtra;416118;India
 END:VCARD
